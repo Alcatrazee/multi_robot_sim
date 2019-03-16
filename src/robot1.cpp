@@ -82,7 +82,7 @@ void odom1_callback(const nav_msgs::Odometry odom)
     {
       path_ptr--;
     }
-    if (angle_in_robot > deg2rad(20) || angle_in_robot < -deg2rad(20))
+    if (angle_in_robot > deg2rad(30) || angle_in_robot < -deg2rad(30))
     {
       output_vx = 0;
     }

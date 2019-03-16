@@ -9,7 +9,7 @@
         <arg name="recording" value="false"/>
         <arg name="debug" value="false"/>
     </include>
-    
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find multiple_rb_ctrl)config.rviz" />
     <group ns="robot1">
       <param name="robot_description"
               command="$(find xacro)/xacro.py $(find multiple_rb_ctrl)/urdf/model.xacro ns:=robot1 " />
@@ -56,7 +56,7 @@
         args="0 0 0 0 0 0 map robot4/odom 100" />   
     </group> -->
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find multiple_rb_ctrl)config.rviz" />
+    
     <!-- <node name="cost_map_server" pkg="multiple_rb_ctrl" type="cost_map_node.py" /> -->
     <group ns="costmap">
         <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/eroded_map.yaml" output="screen" />
@@ -66,7 +66,7 @@
         <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/new_map.yaml" output="screen" />
     </group>    
 
-    <node name="path_server" pkg="path_gen_srv" type="path_gen_srv" />
+    <!-- <node name="path_server" pkg="path_gen_srv" type="path_gen_srv" /> -->
     <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" />
 <!--     <node name="robot2" pkg="multiple_rb_ctrl" type="robot2" /> -->
     
