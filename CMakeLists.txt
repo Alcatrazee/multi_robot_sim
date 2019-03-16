@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   roscpp
+  path_gen_srv
 )
 
 ## System dependencies are found with CMake's conventions
@@ -199,5 +200,17 @@ include_directories(
 # catkin_add_nosetests(test)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
-add_executable(test_ctrl src/test_script.cpp)
-target_link_libraries(test_ctrl ${catkin_LIBRARIES})
+add_executable(robot1 src/robot1.cpp)
+target_link_libraries(robot1 ${catkin_LIBRARIES})
+
+add_executable(robot2 src/robot2.cpp)
+target_link_libraries(robot2 ${catkin_LIBRARIES})
+
+add_executable(robot3 src/robot3.cpp)
+target_link_libraries(robot3 ${catkin_LIBRARIES})
+
+add_executable(robot4 src/robot4.cpp)
+target_link_libraries(robot4 ${catkin_LIBRARIES})
+
+add_executable(robot_origin src/robot_origin.cpp)
+target_link_libraries(robot_origin ${catkin_LIBRARIES})

@@ -10,7 +10,7 @@
     <xacro:macro name="default_inertial" params="mass">
                <inertial>
                        <mass value="${mass}" />
-                       <inertia ixx="0.0045" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.0045" />
+                       <inertia ixx="0.0045" ixy="0" ixz="0" iyy="0.0045" iyz="0" izz="0.0045" />
                </inertial>
     </xacro:macro>
 
@@ -49,7 +49,7 @@
         </collision>
         <inertial>
             <mass value="35" />
-            <inertia ixx="0.6125" ixy="0.00495" ixz="0.0031" iyy="0.6426" iyz="-0.0017" izz="0.494" />
+            <inertia ixx="0.45" ixy="0.000" ixz="0.000" iyy="0.55" iyz="0.000" izz="0.6125" />
         </inertial>
     </link>
 
@@ -232,7 +232,7 @@
             <robotBaseFrame>${ns}base_footprint</robotBaseFrame>
             <odometryFrame>${ns}odom</odometryFrame>
             <torque>15</torque>
-            <topicName>${ns}cmd_vel</topicName>
+            <topicName>cmd_vel</topicName>
             <broadcastTF>1</broadcastTF>
             
         </plugin>
@@ -265,8 +265,8 @@
                 </noise>
             </ray>
             <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
-                <topicName>${ns}scan</topicName>
-                <frameName>${ns}hokuyo_link</frameName>
+                <topicName>scan</topicName>
+                <frameName>hokuyo_link</frameName>
             </plugin>
         </sensor>
     </gazebo>

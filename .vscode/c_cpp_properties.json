@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/alcatraz/catkin_ws/devel/include",
+                "/opt/ros/kinetic/include",
+                "/home/alcatraz/catkin_ws/src/gazebo_test/include",
+                "/home/alcatraz/catkin_ws/src/map_test/include",
+                "/home/alcatraz/catkin_ws/src/multiple_rb_ctrl/include",
+                "/home/alcatraz/catkin_ws/src/my_lidar_slam/include",
+                "/home/alcatraz/catkin_ws/src/path_gen_srv/include",
+                "/home/alcatraz/catkin_ws/src/urdf_test2/include",
+                "/usr/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
