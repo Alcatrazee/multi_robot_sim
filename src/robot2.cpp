@@ -148,8 +148,9 @@ int main(int argc, char **argv)
   ros::ServiceClient client = nh.serviceClient<path_gen_srv::path_gen_srv>("/path_server");
   ros::Rate rate(100);
   geometry_msgs::Twist twist1;
-  ROS_INFO("controller start!");
+  ROS_INFO("robot2 controller start!");
   ros::spinOnce();
+  client.waitForExistence();
   while (ros::ok())
   {
     if (robot_state == wait_for_command && new_goal == false)

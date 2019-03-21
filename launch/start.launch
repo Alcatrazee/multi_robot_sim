@@ -69,7 +69,7 @@
         <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/map.yaml" output="screen" />
     </group>    
      
-    <node name="path_server" pkg="path_gen_srv" type="path_gen_srv" output="screen" />
+    <node name="path_server" pkg="path_gen_srv" type="path_gen_srv" output="screen" respawn="true" />
     <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" />
     <node name="robot2" pkg="multiple_rb_ctrl" type="robot2" />
     

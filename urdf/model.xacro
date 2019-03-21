@@ -131,7 +131,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="package://robot1_description/meshes/hokuyo.dae" />
+                <mesh filename="package://multiple_rb_ctrl/urdf/hokuyo.dae" />
             </geometry>
         </visual>
 
