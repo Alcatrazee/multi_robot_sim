@@ -35,7 +35,7 @@
         <visual>
             <geometry>
                     <box size="0.2 .3 .1"/>
-                </geometry>
+            </geometry>
             <origin rpy="0 0 1.571" xyz="0 0 0.05"/>
             <material name="white">
                 <color rgba="1 1 1 1"/>
@@ -148,7 +148,6 @@
             <origin xyz="0 0 0" rpy="0 0 0 " />
         </inertial>
 
-        
     </link>
 
     <joint name="${ns}base_to_wheel1" type="continuous">
@@ -231,7 +230,7 @@
             <odometryTopic>${ns}odom</odometryTopic>
             <robotBaseFrame>${ns}base_footprint</robotBaseFrame>
             <odometryFrame>${ns}odom</odometryFrame>
-            <torque>15</torque>
+            <torque>20</torque>
             <topicName>cmd_vel</topicName>
             <broadcastTF>1</broadcastTF>
             
