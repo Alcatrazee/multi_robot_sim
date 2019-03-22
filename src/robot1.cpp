@@ -12,14 +12,14 @@
 using namespace std;
 
 #define PI 3.14159
-#define max_av PI / 8
-#define min_av -PI / 8
-#define max_v 0.25
-#define min_v -0.25
+#define max_av PI / 4
+#define min_av -PI / 4
+#define max_v 0.3
+#define min_v -max_v
 
-#define wait_for_command 0
-#define moving 1
-#define adjust 2
+#define stop 0
+#define moving_forth 1
+#define rotate 2
 
 geometry_msgs::Twist output_cmd_vel;
 path_gen_srv::path_gen_srv path_req;
@@ -31,6 +31,7 @@ char robot_state = 0;
 const float end_ore = PI / 2;
 const float end_ore_tolerance = 0.5;
 const float boundery = 4.5;
+bool order_received = false;
 
 float transform_world_to_robot(const nav_msgs::Odometry odom, float target_pos[2], float robot_coor[2])
 {
@@ -73,6 +74,11 @@ float round_coor(float num_to_round)
   return result;
 }
 
+bool apply_for_grid_occupation(float grid_coor[2])
+{
+  return true;
+}
+
 void odom1_callback(const nav_msgs::Odometry odom)
 {
 
@@ -84,58 +90,92 @@ void odom1_callback(const nav_msgs::Odometry odom)
   float robot_target[2];
   float distance = 0;
   static float target_end_angle = PI / 2;
-
-  switch (robot_state) // FSM
+  // state changes here!
+  if (order_received)
   {
-  case moving:
+    // set current target(global frame)
     target_position[0] = path.poses[path_ptr].pose.position.x;
     target_position[1] = path.poses[path_ptr].pose.position.y;
-
+    // get current target(robot frame)
     angle_in_robot = transform_world_to_robot(odom, target_position, robot_target);
     distance = sqrt(robot_target[0] * robot_target[0] + robot_target[1] * robot_target[1]);
-    output_az = angle_in_robot * 2;
-    output_vx = distance - abs(0.2 * output_az);
 
-    if (distance <= max_v && path_ptr > 0)
+    // FSM
+    switch (robot_state)
     {
-      path_ptr--;
-    }
-    if (angle_in_robot > deg2rad(1) || angle_in_robot < -deg2rad(1))
-    {
+    case moving_forth:
+      // set twist
+      output_az = angle_in_robot;
+      output_vx = distance * 2;
+      // request for next move
+      if (distance <= max_v && path_ptr > 0)
+      {
+        float target_to_apply[2];
+        float next_next_point_angle = 0;
+        target_to_apply[0] = path.poses[path_ptr - 1].pose.position.x;
+        target_to_apply[1] = path.poses[path_ptr - 1].pose.position.y;
+        next_next_point_angle = transform_world_to_robot(odom, target_to_apply, robot_target);
+        // if next point is in front
+        if (abs(next_next_point_angle) <= deg2rad(2))
+        {
+          // next next point is in front
+          // apply for next next point
+          if (apply_for_grid_occupation(target_to_apply))
+          {
+            // application approved
+            path_ptr--;
+          }
+          // else wait till next next point avaiable
+        }
+      }
+      // close to next point
+      if (distance <= 0.01)
+      {
+        // end
+        if (path_ptr == 0)
+        {
+          robot_state = stop;
+          output_vx = 0;
+          output_az = 0;
+        }
+        else
+        {
+          output_vx = -0.5;
+          if (abs(odom.twist.twist.linear.x <= 0.1))
+          {
+            output_vx = 0;
+            robot_state = rotate;
+            path_ptr--;
+          }
+        }
+      }
+      break;
+    // robot state = rotate
+    case rotate:
       output_vx = 0;
-    }
-    if (distance <= 0.025 && path_ptr == 0)
-    {
-      robot_state = adjust;
-      if (angle > 0)
-        target_end_angle = PI / 2;
-      else if (angle <= 0)
-        target_end_angle = -PI / 2;
+      output_az = angle_in_robot * 2;
+      if (abs(angle_in_robot) <= deg2rad(0.5))
+        robot_state = moving_forth;
+      break;
+    case stop:
+      order_received = false;
       output_vx = 0;
+      output_az = 0;
       break;
     }
-    break;
-  case adjust:
-    output_vx = 0;
-    output_az = 5 * (target_end_angle - angle);
-    if (abs(angle - target_end_angle) < deg2rad(end_ore_tolerance))
-    {
-      ROS_INFO("Position reached.requested position:%f,%f current_position:%f,%f,error:%f,%f angle:%f", path_req.request.goal.position.x, path_req.request.goal.position.y, odom.pose.pose.position.x, odom.pose.pose.position.y, path_req.request.goal.position.x - odom.pose.pose.position.x, path_req.request.goal.position.y - odom.pose.pose.position.y, angle);
-      robot_state = wait_for_command;
-      output_az = 0;
-      new_goal = false;
-    }
-    break;
-  case wait_for_command:
-    output_vx = 0;
-    output_az = 0;
-    break;
   }
-
+  else
+  {
+    //no order received
+    output_az = 0;
+    output_vx = 0;
+  }
+  // velocity limitation
   if (output_az > max_av)
     output_az = max_av;
   else if (output_az < min_av)
     output_az = min_av;
+  // angular velocity limitation
   if (output_vx > max_v)
     output_vx = max_v;
   else if (output_vx < min_v)
@@ -144,13 +184,13 @@ void odom1_callback(const nav_msgs::Odometry odom)
   path_req.request.start_point.position.x = round_coor(odom.pose.pose.position.x);
   path_req.request.start_point.position.y = round_coor(odom.pose.pose.position.y);
 
-  output_cmd_vel.linear.x = output_vx;
+  output_cmd_vel.linear.x = output_vx / 2;
   output_cmd_vel.angular.z = output_az;
+  ROS_INFO("%f %f %d", output_cmd_vel.linear.x, output_cmd_vel.angular.z, robot_state);
 }
 
 void click_callback(const geometry_msgs::PointStamped pose_des)
 {
-
   path_req.request.goal.position.x = round_coor(pose_des.point.x);
   path_req.request.goal.position.y = round_coor(pose_des.point.y);
   ROS_INFO("%f %f %f %f", pose_des.point.x, pose_des.point.y, path_req.request.goal.position.x, path_req.request.goal.position.y);
@@ -186,9 +226,11 @@ int main(int argc, char **argv)
     {
       if (client.call(path_req))
       {
-        robot_state = moving;
+        order_received = true;
         path = path_req.response.Path;
         path_ptr = path.poses.size() - 1;
+        order_received = true;
+        robot_state = moving_forth;
       }
       else
       {
@@ -203,3 +245,47 @@ int main(int argc, char **argv)
   }
   return 0;
 }
+
+/* case moving_forth:
+    target_position[0] = path.poses[path_ptr].pose.position.x;
+    target_position[1] = path.poses[path_ptr].pose.position.y;
+
+    angle_in_robot = transform_world_to_robot(odom, target_position, robot_target);
+    distance = sqrt(robot_target[0] * robot_target[0] + robot_target[1] * robot_target[1]);
+
+    output_az = angle_in_robot * 2;
+    output_vx = distance - abs(0.2 * output_az);
+
+    if (distance <= max_v && path_ptr > 0)
+    {
+      path_ptr--;
+    }
+    if (angle_in_robot > deg2rad(1) || angle_in_robot < -deg2rad(1))
+    {
+      output_vx = 0;
+    }
+    if (distance <= 0.025 && path_ptr == 0)
+    {
+      robot_state = rotate;
+      if (angle > 0)
+        target_end_angle = PI / 2;
+      else if (angle <= 0)
+        target_end_angle = -PI / 2;
+      output_vx = 0;
+    }
+    break;
+  case rotate:
+    output_vx = 0;
+    output_az = 5 * (target_end_angle - angle);
+    if (abs(angle - target_end_angle) < deg2rad(end_ore_tolerance))
+    {
+      ROS_INFO("Position reached.requested position:%f,%f current_position:%f,%f,error:%f,%f angle:%f", path_req.request.goal.position.x, path_req.request.goal.position.y, odom.pose.pose.position.x, odom.pose.pose.position.y, path_req.request.goal.position.x - odom.pose.pose.position.x, path_req.request.goal.position.y - odom.pose.pose.position.y, angle);
+      robot_state = stop;
+      output_az = 0;
+      new_goal = false;
+    }
+    break;
+  case stop:
+    output_vx = 0;
+    output_az = 0;
+    break; */
