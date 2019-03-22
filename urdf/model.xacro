@@ -34,18 +34,18 @@
     <link name="${ns}base_link">
         <visual>
             <geometry>
-                    <box size="0.2 .3 .1"/>
+                    <box size="0.2 0.3 0.1"/>
             </geometry>
-            <origin rpy="0 0 1.571" xyz="0 0 0.05"/>
+            <origin rpy="0 0 1.571" xyz="0 0 0.00"/>
             <material name="white">
                 <color rgba="1 1 1 1"/>
             </material>
         </visual>
         <collision>
             <geometry>
-                    <box size="0.2 .3 0.1"/>
+                    <box size="0.2 0.3 0.1"/>
             </geometry>
-            <origin rpy="0 0 1.571" xyz="0 0 0.05"/>
+            <origin rpy="0 0 1.571" xyz="0 0 0.00"/>
         </collision>
         <inertial>
             <mass value="35" />
@@ -90,40 +90,56 @@
 
     </link>
 
-    <link name="${ns}wheel_3">
+    <link name="${ns}front_omni">
         <visual>
                 <geometry>
-                    <cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+                    <sphere radius="0.0125"/>
                 </geometry>
-            <!-- <origin rpy="0 1.5 0" xyz="0.1 -0.1 0"/> -->
-
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <material name="black"/>
         </visual>
         <collision>
             <geometry>
-                    <cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+                   <sphere radius="0.0124"/>
             </geometry>
+            <surface>
+              <friction>
+                <ode>
+                  <mu>0</mu>
+                  <mu2>0</mu2>
+                  <slip1>1.0</slip1>
+                  <slip2>1.0</slip2>
+                </ode>
+              </friction>
+            </surface>
         </collision>
-        <xacro:default_inertial mass="4.3542"/>
+        <xacro:default_inertial mass="1"/>
     </link>
 
-    <link name="${ns}wheel_4">
+    <link name="${ns}back_omni">
         <visual>
                 <geometry>
-                    <cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+                    <sphere radius="0.0125"/>
                 </geometry>
-        <!--    <origin rpy="0 1.5 0" xyz="-0.1 -0.1 0"/> -->
             <origin rpy="0 0 0" xyz="0 0 0" />
             <material name="black"/>
         </visual>
         <collision>
             <geometry>
-                    <cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+                   <sphere radius="0.0124"/>
             </geometry>
+            <surface>
+              <friction>
+                <ode>
+                  <mu>0</mu>
+                  <mu2>0</mu2>
+                  <slip1>1.0</slip1>
+                  <slip2>1.0</slip2>
+                </ode>
+              </friction>
+            </surface>
         </collision>
-        <xacro:default_inertial mass="4.3542"/>
-
+        <xacro:default_inertial mass="1"/>
     </link>
     
     <link name="${ns}hokuyo_link">
@@ -140,6 +156,7 @@
             <geometry>
                 <box size="0.05 0.05 0.07" />
             </geometry>
+
         </collision>
 
         <inertial>
@@ -151,33 +168,29 @@
     </link>
 
     <joint name="${ns}base_to_wheel1" type="continuous">
-    <parent link="${ns}base_link"/>
-    <child link="${ns}wheel_1"/>
-    <origin rpy="-1.5707 0 0" xyz="0.1 0.15 0"/>
-    <axis xyz="0 0 1" />
+        <parent link="${ns}base_link"/>
+        <child link="${ns}wheel_1"/>
+        <origin rpy="-1.5707 0 0" xyz="0.0 -0.09 -0.0125"/>
+        <axis xyz="0 0 1" />
     </joint>
 
     <joint name="${ns}base_to_wheel2" type="continuous">
-    <axis xyz="0 0 1" />
-    <anchor xyz="0 0 0" />
-    <limit effort="100" velocity="100" />
-    <parent link="${ns}base_link"/>
-    <child link="${ns}wheel_2"/>
-    <origin rpy="-1.5707 0 0" xyz="-0.1 0.15 0"/>
+        <axis xyz="0 0 1" />
+        <parent link="${ns}base_link"/>
+        <child link="${ns}wheel_2"/>
+        <origin rpy="-1.5707 0 0" xyz="-0.0 0.09 -0.0125"/>
     </joint>
 
-    <joint name="${ns}base_to_wheel3" type="continuous">
-    <parent link="${ns}base_link"/>
-    <axis xyz="0 0 1" />
-    <child link="${ns}wheel_3"/>
-    <origin rpy="-1.5707 0 0" xyz="0.1 -0.15 0"/>
+    <joint name="${ns}base_to_front_omni" type="fixed">
+        <parent link="${ns}base_link"/>
+        <child link="${ns}front_omni"/>
+        <origin rpy="0 0 0" xyz="0.10 0 -0.05"/>
     </joint>
 
-    <joint name="${ns}base_to_wheel4" type="continuous">
-    <parent link="${ns}base_link"/>
-    <axis xyz="0 0 1" />
-    <child link="${ns}wheel_4"/>
-    <origin rpy="-1.5707 0 0" xyz="-0.1 -0.15 0"/>
+    <joint name="${ns}base_to_back_omni" type="fixed">
+        <parent link="${ns}base_link"/>
+        <child link="${ns}back_omni"/>
+        <origin rpy="0 0 0" xyz="-0.10 0 -0.05"/>
     </joint>   
 
 
@@ -185,37 +198,61 @@
         <parent link="${ns}base_link"/>
         <child link="${ns}hokuyo_link"/>
         <axis xyz="0 1 0" />
-        <origin xyz="0.125 0.05 0.135" rpy="0 0 0"/>
+        <origin xyz="0.125 0.0 0.085" rpy="0 0 0"/>
     </joint>
-
+ 
         <gazebo reference="${ns}base_link">
         <material>Gazebo/Orange</material>
     </gazebo>
 
     <gazebo reference="${ns}wheel_1">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/Grey</material>
     </gazebo>
 
     <gazebo reference="${ns}wheel_2">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/Grey</material>
     </gazebo>
 
-    <gazebo reference="${ns}wheel_3">
-        <material>Gazebo/Gray</material>
+    <gazebo reference="${ns}front_omni">
+        <material>Gazebo/Grey</material>
     </gazebo>
 
-    <gazebo reference="${ns}wheel_4">
-        <material>Gazebo/Gray</material>
+    <gazebo reference="${ns}back_omni">
+        <material>Gazebo/Grey</material>
     </gazebo>
 
 
     <gazebo>
         <plugin name="${ns}gazebo_ros_control" filename="libgazebo_ros_control.so">
-        <robotNamespace>${ns}</robotNamespace>
+            <robotNamespace>${ns}</robotNamespace>
+<!--             <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+            <legacyModeNS>true</legacyModeNS> -->
         </plugin>
     </gazebo>
 
     <gazebo>
+        <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>100</updateRate>
+            <leftJoint>${ns}base_to_wheel1</leftJoint>
+            <rightJoint>${ns}base_to_wheel2</rightJoint>
+            <wheelSeparation>0.18</wheelSeparation>
+            <wheelDiameter>${radius_wheel}</wheelDiameter>
+            <commandTopic>cmd_vel</commandTopic>
+            <odometryTopic>odom</odometryTopic>
+            <odometryFrame>odom</odometryFrame>
+            <publishWheelTF>true</publishWheelTF>
+            <publishOdomTF>true</publishOdomTF>
+            <wheelTorque>10</wheelTorque>
+            <legacyMode>true</legacyMode>
+            <publishWheelJointState>true</publishWheelJointState>
+            <wheelAcceleration>2</wheelAcceleration>
+            <robotBaseFrame>base_link</robotBaseFrame>
+            <publishTF>true</publishTF>
+        </plugin>
+    </gazebo>
+    <!--
+     <gazebo>
         <plugin name="${ns}skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
             <updateRate>100.0</updateRate>
             <robotNamespace></robotNamespace>
@@ -235,7 +272,7 @@
             <broadcastTF>1</broadcastTF>
             
         </plugin>
-    </gazebo>
+    </gazebo> 
 
 
     <gazebo reference="${ns}hokuyo_link">
@@ -269,7 +306,7 @@
             </plugin>
         </sensor>
     </gazebo>
-   
+    -->
 </robot>
 
 

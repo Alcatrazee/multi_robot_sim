@@ -12,10 +12,10 @@
 using namespace std;
 
 #define PI 3.14159
-#define max_av PI / 4
-#define min_av -PI / 4
-#define max_v 0.4
-#define min_v -0.4
+#define max_av PI / 8
+#define min_av -PI / 8
+#define max_v 0.25
+#define min_v -0.25
 
 #define wait_for_command 0
 #define moving 1
@@ -30,7 +30,7 @@ bool new_goal = false;
 char robot_state = 0;
 const float end_ore = PI / 2;
 const float end_ore_tolerance = 0.5;
-const float boundery = 4.8;
+const float boundery = 4.5;
 
 float transform_world_to_robot(const nav_msgs::Odometry odom, float target_pos[2], float robot_coor[2])
 {
@@ -55,6 +55,24 @@ inline float get_theta(const nav_msgs::Odometry odom)
   return atan2(2 * (odom.pose.pose.orientation.w * odom.pose.pose.orientation.z + odom.pose.pose.orientation.x * odom.pose.pose.orientation.y), 1 - 2 * (odom.pose.pose.orientation.y * odom.pose.pose.orientation.y + odom.pose.pose.orientation.z * odom.pose.pose.orientation.z));
 }
 
+float round_coor(float num_to_round)
+{
+  float result = 0;
+  int int_part = (int)num_to_round;
+  float little_part = num_to_round - int_part;
+  if (abs(little_part) >= 0.25 && abs(little_part) < 0.75)
+  {
+    result = num_to_round / abs(num_to_round) * (abs((float)int_part) + 0.5);
+  }
+  else if (abs(little_part) < 0.25)
+  {
+    result = num_to_round / abs(num_to_round) * abs(int_part);
+  }
+  else if (abs(little_part) >= 0.75)
+    result = num_to_round / abs(num_to_round) * (abs(int_part) + 1);
+  return result;
+}
+
 void odom1_callback(const nav_msgs::Odometry odom)
 {
 
@@ -77,15 +95,12 @@ void odom1_callback(const nav_msgs::Odometry odom)
     distance = sqrt(robot_target[0] * robot_target[0] + robot_target[1] * robot_target[1]);
     output_az = angle_in_robot * 2;
     output_vx = distance - abs(0.2 * output_az);
-    if (output_vx > max_v)
-      output_vx = max_v;
-    else if (output_vx < min_v)
-      output_vx = min_v;
-    if (distance <= 0.4 && path_ptr > 0)
+
+    if (distance <= max_v && path_ptr > 0)
     {
       path_ptr--;
     }
-    if (angle_in_robot > deg2rad(30) || angle_in_robot < -deg2rad(30))
+    if (angle_in_robot > deg2rad(1) || angle_in_robot < -deg2rad(1))
     {
       output_vx = 0;
     }
@@ -109,21 +124,25 @@ void odom1_callback(const nav_msgs::Odometry odom)
       robot_state = wait_for_command;
       output_az = 0;
       new_goal = false;
-      break;
     }
-    if (output_az > max_av)
-      output_az = max_av;
-    else if (output_az < min_av)
-      output_az = min_av;
     break;
   case wait_for_command:
     output_vx = 0;
     output_az = 0;
-
     break;
   }
-  path_req.request.start_point.position.x = odom.pose.pose.position.x;
-  path_req.request.start_point.position.y = odom.pose.pose.position.y;
+
+  if (output_az > max_av)
+    output_az = max_av;
+  else if (output_az < min_av)
+    output_az = min_av;
+  if (output_vx > max_v)
+    output_vx = max_v;
+  else if (output_vx < min_v)
+    output_vx = min_v;
+
+  path_req.request.start_point.position.x = round_coor(odom.pose.pose.position.x);
+  path_req.request.start_point.position.y = round_coor(odom.pose.pose.position.y);
 
   output_cmd_vel.linear.x = output_vx;
   output_cmd_vel.angular.z = output_az;
@@ -131,9 +150,10 @@ void odom1_callback(const nav_msgs::Odometry odom)
 
 void click_callback(const geometry_msgs::PointStamped pose_des)
 {
-  ROS_INFO("%f %f", pose_des.point.x, pose_des.point.y);
-  path_req.request.goal.position.x = pose_des.point.x;
-  path_req.request.goal.position.y = pose_des.point.y;
+
+  path_req.request.goal.position.x = round_coor(pose_des.point.x);
+  path_req.request.goal.position.y = round_coor(pose_des.point.y);
+  ROS_INFO("%f %f %f %f", pose_des.point.x, pose_des.point.y, path_req.request.goal.position.x, path_req.request.goal.position.y);
   new_goal = true;
 }
 
@@ -153,15 +173,15 @@ int main(int argc, char **argv)
   client.waitForExistence();
   while (ros::ok())
   {
-    if (robot_state == wait_for_command && new_goal == false)
+    /*     if (robot_state == wait_for_command && new_goal == false)
     {
       srand(ros::Time::now().nsec);
-      path_req.request.goal.position.x = (float)rand() / (float)RAND_MAX * 10 - 5;
-      path_req.request.goal.position.y = (float)rand() / (float)RAND_MAX * 10 - 5;
+      path_req.request.goal.position.x = round_coor((float)rand() / (float)RAND_MAX * 10 - 5);
+      path_req.request.goal.position.y = round_coor((float)rand() / (float)RAND_MAX * 10 - 5);
       ROS_INFO("%f %f", path_req.request.goal.position.x, path_req.request.goal.position.y);
       if (abs(path_req.request.goal.position.x) <= boundery && abs(path_req.request.goal.position.y) < boundery)
         new_goal = true;
-    }
+    } */
     if (new_goal == true)
     {
       if (client.call(path_req))

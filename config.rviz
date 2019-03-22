@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Grid1
       Splitter Ratio: 0.5
     Tree Height: 763
   - Class: rviz/Selection
@@ -30,7 +31,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 1
+      Cell Size: 0.5
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -44,7 +45,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 1
@@ -108,41 +109,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        robot2/base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot2/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot2/hokuyo_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot2/wheel_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot2/wheel_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot2/wheel_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot2/wheel_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
       Robot Description: robot2/robot_description
       TF Prefix: ""
@@ -361,12 +327,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map
       Topic: /costmap/map
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Angle Tolerance: 0.100000001
       Class: rviz/Odometry
       Covariance:
@@ -401,6 +367,13 @@ Visualization Manager:
       Topic: /robot2/odom
       Unreliable: false
       Value: false
+    - Class: rviz/Axes
+      Enabled: true
+      Length: 0.5
+      Name: Axes
+      Radius: 0.100000001
+      Reference Frame: <Fixed Frame>
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -435,11 +408,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 78.1928101
+      Scale: 104.111664
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 0.463341534
-      Y: 0.308291227
+      X: 0.645266235
+      Y: 0.520418525
     Saved: ~
 Window Geometry:
   Displays:
@@ -457,5 +430,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 1920
+  X: 0
   Y: 24

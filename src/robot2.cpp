@@ -150,6 +150,9 @@ int main(int argc, char **argv)
   geometry_msgs::Twist twist1;
   ROS_INFO("robot2 controller start!");
   ros::spinOnce();
+
+  path_req.request.start_point.position.x = 1;
+  path_req.request.start_point.position.y = 0;
   client.waitForExistence();
   while (ros::ok())
   {
