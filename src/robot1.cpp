@@ -12,9 +12,9 @@
 using namespace std;
 
 #define PI 3.14159
-#define max_av PI / 4
-#define min_av -PI / 4
-#define max_v 0.3
+#define max_av PI / 3
+#define min_av -PI / 3
+#define max_v 0.4
 #define min_v -max_v
 
 #define stop 0
@@ -106,7 +106,7 @@ void odom1_callback(const nav_msgs::Odometry odom)
     case moving_forth:
       // set twist
       output_az = angle_in_robot;
-      output_vx = distance * 2;
+      output_vx = distance * 1.5;
       // request for next move
       if (distance <= max_v && path_ptr > 0)
       {
@@ -145,7 +145,14 @@ void odom1_callback(const nav_msgs::Odometry odom)
           {
             output_vx = 0;
             robot_state = rotate;
-            path_ptr--;
+            float target_to_apply[2];
+            target_to_apply[0] = path.poses[path_ptr - 1].pose.position.x;
+            target_to_apply[1] = path.poses[path_ptr - 1].pose.position.y;
+            if (apply_for_grid_occupation(target_to_apply))
+            {
+              // application approved
+              path_ptr--;
+            }
           }
         }
       }
@@ -154,7 +161,7 @@ void odom1_callback(const nav_msgs::Odometry odom)
     case rotate:
       output_vx = 0;
       output_az = angle_in_robot * 2;
-      if (abs(angle_in_robot) <= deg2rad(0.5))
+      if (abs(angle_in_robot) <= deg2rad(1))
         robot_state = moving_forth;
       break;
     case stop:
@@ -213,7 +220,7 @@ int main(int argc, char **argv)
   client.waitForExistence();
   while (ros::ok())
   {
-    /*     if (robot_state == wait_for_command && new_goal == false)
+    if (robot_state == stop && new_goal == false)
     {
       srand(ros::Time::now().nsec);
       path_req.request.goal.position.x = round_coor((float)rand() / (float)RAND_MAX * 10 - 5);
@@ -221,7 +228,7 @@ int main(int argc, char **argv)
       ROS_INFO("%f %f", path_req.request.goal.position.x, path_req.request.goal.position.y);
       if (abs(path_req.request.goal.position.x) <= boundery && abs(path_req.request.goal.position.y) < boundery)
         new_goal = true;
-    } */
+    }
     if (new_goal == true)
     {
       if (client.call(path_req))
