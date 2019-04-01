@@ -26,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: rb1_LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -59,11 +59,6 @@ Visualization Manager:
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
         robot1/back_omni:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot1/base_footprint:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -109,6 +104,36 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        robot2/back_omni:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        robot2/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        robot2/front_omni:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        robot2/hokuyo_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        robot2/wheel_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        robot2/wheel_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot2/robot_description
       TF Prefix: ""
@@ -181,7 +206,7 @@ Visualization Manager:
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.00999999978
-      Style: Flat Squares
+      Style: Points
       Topic: /robot1/scan
       Unreliable: false
       Use Fixed Frame: true
@@ -211,7 +236,7 @@ Visualization Manager:
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.00999999978
-      Style: Flat Squares
+      Style: Points
       Topic: /robot2/scan
       Unreliable: false
       Use Fixed Frame: true
@@ -327,12 +352,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: Map
       Topic: /costmap/map
       Unreliable: false
       Use Timestamp: false
-      Value: true
+      Value: false
     - Angle Tolerance: 0.100000001
       Class: rviz/Odometry
       Covariance:
@@ -408,11 +433,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 80.6240692
+      Scale: 84.7486115
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 0.459713578
-      Y: 0.0942429751
+      X: 0.423812866
+      Y: 0.06535016
     Saved: ~
 Window Geometry:
   Displays:
@@ -430,5 +455,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 0
+  X: 1920
   Y: 24

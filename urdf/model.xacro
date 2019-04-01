@@ -13,7 +13,7 @@
                        <inertia ixx="0.0045" ixy="0" ixz="0" iyy="0.0045" iyz="0" izz="0.0045" />
                </inertial>
     </xacro:macro>
-
+<!-- 
     <link name="${ns}base_footprint">
         <visual>
             <geometry>
@@ -29,7 +29,7 @@
         <parent link="${ns}base_footprint" />
         <child link="${ns}base_link" />
     </joint>
-
+ -->
 
     <link name="${ns}base_link">
         <visual>
@@ -224,7 +224,7 @@
 
     <gazebo>
         <plugin name="${ns}gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>${ns}</robotNamespace>
+            <!-- <robotNamespace>${ns}</robotNamespace> -->
 <!--             <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
             <legacyModeNS>true</legacyModeNS> -->
         </plugin>
@@ -241,7 +241,7 @@
             <commandTopic>cmd_vel</commandTopic>
             <odometryTopic>odom</odometryTopic>
             <odometryFrame>odom</odometryFrame>
-            <publishWheelTF>true</publishWheelTF>
+            <!-- <publishWheelTF>true</publishWheelTF> -->
             <publishOdomTF>true</publishOdomTF>
             <wheelTorque>10</wheelTorque>
             <legacyMode>true</legacyMode>
@@ -251,28 +251,6 @@
             <publishTF>true</publishTF>
         </plugin>
     </gazebo>
-    <!--
-     <gazebo>
-        <plugin name="${ns}skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
-            <updateRate>100.0</updateRate>
-            <robotNamespace></robotNamespace>
-            <leftFrontJoint>${ns}base_to_wheel1</leftFrontJoint>     
-            <rightFrontJoint>${ns}base_to_wheel3</rightFrontJoint>
-            <leftRearJoint>${ns}base_to_wheel2</leftRearJoint>
-            <rightRearJoint>${ns}base_to_wheel4</rightRearJoint>
-            <wheelSeparation>0.3</wheelSeparation>
-            <wheelDiameter>0.1</wheelDiameter>
-
-            <commandTopic>${ns}cmd_vel</commandTopic>
-            <odometryTopic>${ns}odom</odometryTopic>
-            <robotBaseFrame>${ns}base_footprint</robotBaseFrame>
-            <odometryFrame>${ns}odom</odometryFrame>
-            <torque>20</torque>
-            <topicName>cmd_vel</topicName>
-            <broadcastTF>1</broadcastTF>
-            
-        </plugin>
-    </gazebo> 
 
 
     <gazebo reference="${ns}hokuyo_link">
@@ -306,6 +284,32 @@
             </plugin>
         </sensor>
     </gazebo>
+    
+    <!--
+     <gazebo>
+        <plugin name="${ns}skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
+            <updateRate>100.0</updateRate>
+            <robotNamespace></robotNamespace>
+            <leftFrontJoint>${ns}base_to_wheel1</leftFrontJoint>     
+            <rightFrontJoint>${ns}base_to_wheel3</rightFrontJoint>
+            <leftRearJoint>${ns}base_to_wheel2</leftRearJoint>
+            <rightRearJoint>${ns}base_to_wheel4</rightRearJoint>
+            <wheelSeparation>0.3</wheelSeparation>
+            <wheelDiameter>0.1</wheelDiameter>
+
+            <commandTopic>${ns}cmd_vel</commandTopic>
+            <odometryTopic>${ns}odom</odometryTopic>
+            <robotBaseFrame>${ns}base_footprint</robotBaseFrame>
+            <odometryFrame>${ns}odom</odometryFrame>
+            <torque>20</torque>
+            <topicName>cmd_vel</topicName>
+            <broadcastTF>1</broadcastTF>
+            
+        </plugin>
+    </gazebo> 
+
+
+    
     -->
 </robot>
 

@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   roscpp
   path_gen_srv
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -55,11 +56,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
+ add_service_files(
+   FILES
+   occupy_grid_srv.srv
 #   Service1.srv
 #   Service2.srv
-# )
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -69,10 +71,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   geometry_msgs#   nav_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   geometry_msgs
+   nav_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -214,3 +217,6 @@ target_link_libraries(robot4 ${catkin_LIBRARIES})
 
 add_executable(robot_origin src/robot_origin.cpp)
 target_link_libraries(robot_origin ${catkin_LIBRARIES})
+
+add_executable(algor_test src/algor_test.cpp)
+target_link_libraries(algor_test ${catkin_LIBRARIES})

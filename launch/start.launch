@@ -24,17 +24,20 @@
     </group>
 
     
-<!--  
+    <node name="occupy_node" pkg="multiple_rb_ctrl" type="algor_test" output="screen" />
     <group ns="robot2">
       <param name="robot_description"
             command="$(find xacro)/xacro.py $(find multiple_rb_ctrl)/urdf/model.xacro ns:=robot2" />
-      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
-      <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
+        <param name="publish_frequency" value="100.0" />
+      </node>
+      <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
       <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
           args="-urdf -model robot2 -param robot_description -x 1 -z 0.05"/>
       <node pkg="tf" type="static_transform_publisher" name="map2rb2"
         args="0 0 0 0 0 0 map robot2/odom 100" />   
-    </group> -->
+
+    </group>
 
   <!--  <group ns="robot3">
       <param name="robot_description"
@@ -68,9 +71,9 @@
         <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/map.yaml" output="screen" />
     </group>    
      
-    <!-- <node name="path_server" pkg="path_gen_srv" type="rough_path_gen_node" output="screen" respawn="true" /> -->
-    <!-- <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" /> -->
-<!--     <node name="robot2" pkg="multiple_rb_ctrl" type="robot2" /> -->
+    <node name="path_server" pkg="path_gen_srv" type="rough_path_gen_node" output="screen" respawn="true" />
+    <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" output="screen" />
+    <node name="robot2" pkg="multiple_rb_ctrl" type="robot2" output="screen" />
     
 
 </launch>
