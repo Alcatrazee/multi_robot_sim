@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <time.h>
 #include <multiple_rb_ctrl/occupy_grid_srv.h>
+#include <multiple_rb_ctrl/instruction_srv.h>
 
 using namespace std;
 
@@ -66,23 +67,23 @@ float round_coor(float num_to_round)
   float result = 0;
   int int_part = (int)num_to_round;
   float little_part = num_to_round - int_part;
-  if (abs(little_part) >= 0.25 && abs(little_part) < 0.75)
+  if (fabs(little_part) >= 0.25 && fabs(little_part) < 0.75)
   {
-    result = num_to_round / abs(num_to_round) * (abs((float)int_part) + 0.5);
+    result = num_to_round / fabs(num_to_round) * (fabs((float)int_part) + 0.5);
   }
   else if (abs(little_part) < 0.25)
   {
-    result = num_to_round / abs(num_to_round) * abs(int_part);
+    result = num_to_round / fabs(num_to_round) * abs(int_part);
   }
   else if (abs(little_part) >= 0.75)
-    result = num_to_round / abs(num_to_round) * (abs(int_part) + 1);
+    result = num_to_round / fabs(num_to_round) * (abs(int_part) + 1);
   return result;
 }
 
 bool apply_for_grid_occupation(float grid_coor[2], bool ocp_or_disocp)
 {
   multiple_rb_ctrl::occupy_grid_srv req;
-  req.request.applier = 1;
+  req.request.applier = 2;
   req.request.point_to_apply.x = grid_coor[0];
   req.request.point_to_apply.y = grid_coor[1];
   if (ocp_or_disocp)
@@ -302,6 +303,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_odom1 = nh.subscribe("robot2/odom", 1, odom1_callback);
   ros::Subscriber sub_point = nh.subscribe("clicked_point", 1, click_callback);
   ros::ServiceClient client = nh.serviceClient<path_gen_srv::path_gen_srv>("/path_server");
+  ros::ServiceClient instruction_client = nh.serviceClient<multiple_rb_ctrl::instruction_srv>("/instruction_server");
   Client_grid = nh.serviceClient<multiple_rb_ctrl::occupy_grid_srv>("/occupy_grid", true);
   ros::Rate rate(100);
   geometry_msgs::Twist twist1;
@@ -309,31 +311,47 @@ int main(int argc, char **argv)
   {
   }
   sleep(3);
-  g_odom.pose.pose.position.x = 1;
-  g_odom.pose.pose.position.y = 0;
-  path_req.request.start_point.position = g_odom.pose.pose.position;
   Client_grid.waitForExistence();
   client.waitForExistence();
-  ros::spinOnce();
+  g_odom.pose.pose.position.x = 4.5;
+  g_odom.pose.pose.position.y = 1;
+  g_odom.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 3.14159);
+  path_req.request.start_point.position = g_odom.pose.pose.position;
+
+  multiple_rb_ctrl::instruction_srv instruction_req;
+  instruction_req.request.robot_id = 2;
+
+  robot_state = stop;
+  new_goal = false;
+  order_received = false;
+
   ROS_INFO("robot2 controller start!");
   while (ros::ok())
   {
 
     if (robot_state == stop && new_goal == false && order_received == false)
     {
-      srand(clock());
+      ROS_INFO("requesting new goal");
+      bool succ = instruction_client.call(instruction_req);
+      ROS_INFO("%d", succ);
+      if (succ)
+      {
+        path_req.request.goal.position.x = instruction_req.response.new_goal.x;
+        path_req.request.goal.position.y = instruction_req.response.new_goal.y;
+        ROS_INFO("new goal received,(%f,%f)", path_req.request.goal.position.x, path_req.request.goal.position.y);
+        if (abs(path_req.request.goal.position.x) <= boundery && abs(path_req.request.goal.position.y) < boundery && (path_req.request.goal.position.x != path_req.request.start_point.position.x && path_req.request.goal.position.y != path_req.request.start_point.position.y))
+        {
+          ROS_INFO("New goal is good");
+          new_goal = true;
+        }
+        else
+        {
+          ROS_INFO("New goal is not good.Regenerate a new goal.");
+        }
+      }
+      /* srand(clock());      //generate random goal
       path_req.request.goal.position.x = round_coor((float)rand() / (float)RAND_MAX * 10 - 5);
-      path_req.request.goal.position.y = round_coor((float)rand() / (float)RAND_MAX * 10 - 5);
-      ROS_INFO("new goal received,(%f,%f)", path_req.request.goal.position.x, path_req.request.goal.position.y);
-      if (abs(path_req.request.goal.position.x) <= boundery && abs(path_req.request.goal.position.y) < boundery && (path_req.request.goal.position.x != path_req.request.start_point.position.x && path_req.request.goal.position.y != path_req.request.start_point.position.y))
-      {
-        ROS_INFO("New goal is good");
-        new_goal = true;
-      }
-      else
-      {
-        ROS_INFO("New goal is not good.Regenerate a new goal.");
-      }
+      path_req.request.goal.position.y = round_coor((float)rand() / (float)RAND_MAX * 10 - 5); */
     }
     if (new_goal == true)
     {
