@@ -8,6 +8,7 @@
 #include <multiple_rb_ctrl/dynamic_path_srv.h>
 #include "spline.h"
 #include "nav_msgs/Odometry.h"
+#include "stdio.h"
 
 using namespace std;
 // define size of the map.(In ros,4000x4000 is default setting)
@@ -52,6 +53,8 @@ float heuristic_scaler = 0;
 const float x_bias = -9, y_bias = -9;
 const float map_resolution = 0.5;
 
+const uint8_t spawn_pos[4][2] = {{13, 18}, {11, 18}, {7, 18}, {5, 18}};
+
 nav_msgs::Odometry Odom[4];
 /*
 	error code  0: no sloution to the map
@@ -76,12 +79,12 @@ bool map_rec_callback(multiple_rb_ctrl::dynamic_path_srv::Request &req, multiple
 bool Is_in_open_or_closed_set(uint16_t point[2], uint16_t OpenSet[OpenSet_array_size][7], uint16_t ClosedSet[closedset_array_size][7], uint16_t closed_list_counter);
 void find_avaiable_point(uint16_t point[2]);
 void generate_map(void);
-void generate_occupied_map(int8_t using_map[Height][Width]);
+void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], uint8_t current_id);
 float round_coor(float num_to_round);
 
 // using_map is original map
 // map_to_copy is map to create
-void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], int valid_robot_num, uint8_t current_id)
+void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], uint8_t current_id)
 {
   // step 1. copy map
   for (int _row = 0; _row < 19; _row++)
@@ -95,17 +98,22 @@ void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_
   for (int used_robot_num = 0; used_robot_num < 4; used_robot_num++)
   {
     if (used_robot_num != current_id - 1)
-      map_to_copy[robot_coor[used_robot_num][0]][robot_coor[used_robot_num][1]] = obstacle_mark;
+    {
+      // only those are close enough will be treated as obstacles.
+      if (abs(robot_coor[used_robot_num][0] - robot_coor[current_id - 1][0]) <= 2 && abs(robot_coor[used_robot_num][1] - robot_coor[current_id - 1][1]) <= 2)
+        map_to_copy[robot_coor[used_robot_num][0]][robot_coor[used_robot_num][1]] = obstacle_mark;
+      map_to_copy[spawn_pos[used_robot_num][0]][spawn_pos[used_robot_num][1]] = obstacle_mark;
+    }
   }
-
+  /*   // show map
   for (int _row = 0; _row < 19; _row++)
   {
     for (int _col = 0; _col < 19; _col++)
     {
-      cout << map_to_copy[_row][_col] << "   ";
+      printf("%3c", map_to_copy[_row][_col]);
     }
     cout << endl;
-  }
+  } */
 }
 
 float round_coor(float num_to_round)
@@ -822,8 +830,6 @@ bool map_rec_callback(multiple_rb_ctrl::dynamic_path_srv::Request &req, multiple
   // transform coordinate of robots
   for (int i = 0; i < 4; i++)
   {
-    if (i == req.robot_id - 1)
-      continue;
     robot_coordinate[i][0] = (uint32_t)(Odom[i].pose.pose.position.y / 0.5 + 9);
     robot_coordinate[i][1] = (uint32_t)(Odom[i].pose.pose.position.x / 0.5 + 9);
   }
@@ -861,11 +867,7 @@ bool map_rec_callback(multiple_rb_ctrl::dynamic_path_srv::Request &req, multiple
   }
   if (search_enable == true)
   {
-    /*     get_obstacle_coor();
-
-    generate_occupied_map(map_arr, map_to_use, ); */
-
-    generate_occupied_map(map_arr, map_to_use, robot_coordinate, 3, req.robot_id);
+    generate_occupied_map(map_arr, map_to_use, robot_coordinate, req.robot_id);
 
     ROS_INFO("Start searching...");
     start_time = clock();                                                        // start the clock ticking

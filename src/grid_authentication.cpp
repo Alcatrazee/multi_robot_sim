@@ -15,10 +15,11 @@ class Occupied_grid_map
 {
 private:
   // occupied:true  not occupied:false
+
+public:
   bool _occupied[19][19];
   uint8_t _occupied_by_who[19][19];
 
-public:
   bool check_if_occupied(uint32_t point[2])
   {
     if (_occupied[point[0]][point[1]])
@@ -75,7 +76,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
   point[0] = (uint32_t)(req.point_to_apply.y / 0.5 + 9);
   point[1] = (uint32_t)(req.point_to_apply.x / 0.5 + 9);
   ROS_INFO("received request");
-  start_time = clock();
+  /*   start_time = clock(); */
   if (req.operation == occupy)
   {
     if (!Ocg.check_if_occupied(point))
@@ -93,9 +94,16 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
     Ocg.set_disoccupy(point);
     res.succeed_or_not = true;
   }
-  end_time = clock();
-
-  ROS_INFO("answered,total runtime: %f", (double)(end_time - start_time) / CLOCKS_PER_SEC);
+  /*   end_time = clock();
+  for (int _row = 0; _row < 19; _row++)
+  {
+    for (int _col = 0; _col < 19; _col++)
+    {
+      printf("%3d", Ocg._occupied[_row][_col]);
+    }
+    cout << endl;
+  }
+  ROS_INFO("answered,total runtime: %f", (double)(end_time - start_time) / CLOCKS_PER_SEC); */
   return true;
 }
 

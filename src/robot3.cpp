@@ -351,6 +351,18 @@ int main(int argc, char **argv)
     }
     if (new_goal == true)
     {
+      // encounter conflict and so to get a new path.
+      if (path_ptr != 0)
+      {
+        float target_to_apply[2];
+        target_to_apply[0] = path.poses[path_ptr + 1].pose.position.x;
+        target_to_apply[1] = path.poses[path_ptr + 1].pose.position.y;
+        // apply for next point if failed , stop and wait
+        apply_for_grid_occupation(target_to_apply, false);
+        target_to_apply[0] = path.poses[path_ptr].pose.position.x;
+        target_to_apply[1] = path.poses[path_ptr].pose.position.y;
+        apply_for_grid_occupation(target_to_apply, false);
+      }
       if (client.call(path_req))
       {
         ROS_INFO("request for path");
