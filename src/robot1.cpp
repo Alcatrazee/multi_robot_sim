@@ -3,7 +3,7 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <tf/tf.h>
-#include <path_gen_srv/path_gen_srv.h>
+#include <multiple_rb_ctrl/dynamic_path_srv.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <time.h>
 #include <cmath>
@@ -23,9 +23,10 @@ using namespace std;
 #define moving_forth 1
 #define rotate 2
 #define wait_mode 3
+#define robot_id_ 1
 
 geometry_msgs::Twist output_cmd_vel;
-path_gen_srv::path_gen_srv path_req;
+multiple_rb_ctrl::dynamic_path_srv path_req;
 size_t path_ptr = 0;
 nav_msgs::Path path;
 bool new_goal = false;
@@ -115,8 +116,6 @@ void odom1_callback(const nav_msgs::Odometry odom)
 {
   g_odom.pose = odom.pose;
   g_odom.twist = odom.twist;
-  path_req.request.start_point.position.x = round_coor(g_odom.pose.pose.position.x);
-  path_req.request.start_point.position.y = round_coor(g_odom.pose.pose.position.y);
 }
 
 void click_callback(const geometry_msgs::PointStamped pose_des)
@@ -302,7 +301,7 @@ int main(int argc, char **argv)
   ros::Publisher path_pub = nh.advertise<nav_msgs::Path>("/robot1/path", 1);
   ros::Subscriber sub_odom1 = nh.subscribe("robot1/odom", 1, odom1_callback);
   ros::Subscriber sub_point = nh.subscribe("clicked_point", 1, click_callback);
-  ros::ServiceClient client = nh.serviceClient<path_gen_srv::path_gen_srv>("/path_server");
+  ros::ServiceClient client = nh.serviceClient<multiple_rb_ctrl::dynamic_path_srv>("/path_server");
   ros::ServiceClient instruction_client = nh.serviceClient<multiple_rb_ctrl::instruction_srv>("/instruction_server");
   Client_grid = nh.serviceClient<multiple_rb_ctrl::occupy_grid_srv>("/occupy_grid", true);
   ros::Rate rate(100);
@@ -317,11 +316,12 @@ int main(int argc, char **argv)
   g_odom.pose.pose.position.x = 4.5;
   g_odom.pose.pose.position.y = 2;
   g_odom.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 3.14159);
-  path_req.request.start_point.position = g_odom.pose.pose.position;
   ROS_INFO("robot1 controller start!");
 
   multiple_rb_ctrl::instruction_srv instruction_req;
-  instruction_req.request.robot_id = 1;
+  instruction_req.request.robot_id = robot_id_;
+
+  path_req.request.robot_id = robot_id_;
 
   robot_state = stop;
   new_goal = false;
@@ -333,13 +333,12 @@ int main(int argc, char **argv)
     {
       ROS_INFO("requesting new goal");
       bool succ = instruction_client.call(instruction_req);
-      ROS_INFO("%d", succ);
       if (succ)
       {
         path_req.request.goal.position.x = instruction_req.response.new_goal.x;
         path_req.request.goal.position.y = instruction_req.response.new_goal.y;
         ROS_INFO("new goal received,(%f,%f)", path_req.request.goal.position.x, path_req.request.goal.position.y);
-        if (abs(path_req.request.goal.position.x) <= boundery && abs(path_req.request.goal.position.y) < boundery && (path_req.request.goal.position.x != path_req.request.start_point.position.x && path_req.request.goal.position.y != path_req.request.start_point.position.y))
+        if (abs(path_req.request.goal.position.x) <= boundery && abs(path_req.request.goal.position.y) < boundery)
         {
           ROS_INFO("New goal is good");
           new_goal = true;
@@ -349,9 +348,6 @@ int main(int argc, char **argv)
           ROS_INFO("New goal is not good.Regenerate a new goal.");
         }
       }
-      /* srand(clock());      //generate random goal
-      path_req.request.goal.position.x = round_coor((float)rand() / (float)RAND_MAX * 10 - 5);
-      path_req.request.goal.position.y = round_coor((float)rand() / (float)RAND_MAX * 10 - 5); */
     }
     if (new_goal == true)
     {

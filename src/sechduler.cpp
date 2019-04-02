@@ -104,60 +104,60 @@ void generate_new_goal(uint8_t robot_id, multiple_rb_ctrl::instruction_srv::Resp
 
 bool server_callback(multiple_rb_ctrl::instruction_srv::Request &req, multiple_rb_ctrl::instruction_srv::Response &res)
 {
-  static uint8_t state[4] = {0};
-  ROS_INFO("new call received...");
+  static uint8_t state[4] = {at_docking, at_docking, at_docking, at_docking};
+  ROS_INFO("new call received... %d", state[0]);
   switch (req.robot_id)
   {
   case 1:
-    if (state[0] == at_docking)
+    if (state[0] == at_working_space)
     {
       res.new_goal.x = 4.5;
       res.new_goal.y = 2;
-      state[0] = at_working_space;
+      state[0] = at_docking;
     }
     else
     {
       generate_new_goal(req.robot_id, res);
-      state[0] = at_docking;
+      state[0] = at_working_space;
     }
     break;
   case 2:
-    if (state[1] == at_docking)
+    if (state[1] == at_working_space)
     {
       res.new_goal.x = 4.5;
       res.new_goal.y = 1;
-      state[1] = at_working_space;
+      state[1] = at_docking;
     }
     else
     {
       generate_new_goal(req.robot_id, res);
-      state[1] = at_docking;
+      state[1] = at_working_space;
     }
     break;
   case 3:
-    if (state[2] == at_docking)
+    if (state[2] == at_working_space)
     {
       res.new_goal.x = 4.5;
       res.new_goal.y = -1;
-      state[2] = at_working_space;
+      state[2] = at_docking;
     }
     else
     {
       generate_new_goal(req.robot_id, res);
-      state[2] = at_docking;
+      state[2] = at_working_space;
     }
     break;
   case 4:
-    if (state[3] == at_docking)
+    if (state[3] == at_working_space)
     {
       res.new_goal.x = 4.5;
       res.new_goal.y = -2;
-      state[3] = at_working_space;
+      state[3] = at_docking;
     }
     else
     {
       generate_new_goal(req.robot_id, res);
-      state[3] = at_docking;
+      state[3] = at_working_space;
     }
     break;
   }

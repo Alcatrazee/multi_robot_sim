@@ -4,19 +4,18 @@
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
-#include <path_gen_srv/path_gen_srv.h>
 #include "dynamic_reconfigure/server.h"
-#include <path_gen_srv/path_srvConfig.h>
+#include <multiple_rb_ctrl/dynamic_path_srv.h>
 #include "spline.h"
 #include "nav_msgs/Odometry.h"
 
 using namespace std;
 // define size of the map.(In ros,4000x4000 is default setting)
-#define Height 1024
-#define Width 1024
+#define Height 19
+#define Width 19
 // define size of openset and closedset
-#define OpenSet_array_size 2000
-#define closedset_array_size 40000
+#define OpenSet_array_size 361
+#define closedset_array_size 361
 // define mark of obstacle and unknown place on the map
 #define obstacle_mark 100
 #define unknown_mark -1
@@ -53,7 +52,7 @@ float heuristic_scaler = 0;
 const float x_bias = -9, y_bias = -9;
 const float map_resolution = 0.5;
 
-nav_msgs::Odometry Odom1, Odom2, Odom3, Odom4;
+nav_msgs::Odometry Odom[4];
 /*
 	error code  0: no sloution to the map
 	error code -1:
@@ -73,12 +72,41 @@ uint16_t Find_parent_index(uint16_t parent[2], uint16_t ClosedSet[closedset_arra
 uint16_t Get_path(uint16_t ClosedSet[closedset_array_size][7], uint16_t CloseSet_index, uint16_t Path[length][fn], uint16_t start_point[2]);
 uint16_t Check_start_end_point(int8_t map[Height][Width], uint16_t start_point[2], uint16_t end_point[2]);
 void Transform_coordinate(float start[2], float end[2], uint16_t start_point[2], uint16_t end_point[2]);
-bool map_rec_callback(path_gen_srv::path_gen_srv::Request &req, path_gen_srv::path_gen_srv::Response &res);
+bool map_rec_callback(multiple_rb_ctrl::dynamic_path_srv::Request &req, multiple_rb_ctrl::dynamic_path_srv::Response &res);
 bool Is_in_open_or_closed_set(uint16_t point[2], uint16_t OpenSet[OpenSet_array_size][7], uint16_t ClosedSet[closedset_array_size][7], uint16_t closed_list_counter);
-void reconfigure_callback(path_gen_srv::path_srvConfig &config, uint32_t level);
 void find_avaiable_point(uint16_t point[2]);
 void generate_map(void);
+void generate_occupied_map(int8_t using_map[Height][Width]);
 float round_coor(float num_to_round);
+
+// using_map is original map
+// map_to_copy is map to create
+void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], int valid_robot_num, uint8_t current_id)
+{
+  // step 1. copy map
+  for (int _row = 0; _row < 19; _row++)
+  {
+    for (int _col = 0; _col < 19; _col++)
+    {
+      map_to_copy[_row][_col] = using_map[_row][_col];
+    }
+  }
+  // step 2. add robot occupied grid
+  for (int used_robot_num = 0; used_robot_num < 4; used_robot_num++)
+  {
+    if (used_robot_num != current_id - 1)
+      map_to_copy[robot_coor[used_robot_num][0]][robot_coor[used_robot_num][1]] = obstacle_mark;
+  }
+
+  for (int _row = 0; _row < 19; _row++)
+  {
+    for (int _col = 0; _col < 19; _col++)
+    {
+      cout << map_to_copy[_row][_col] << "   ";
+    }
+    cout << endl;
+  }
+}
 
 float round_coor(float num_to_round)
 {
@@ -112,12 +140,6 @@ void generate_map(void)
   }
 }
 
-void reconfigure_callback(path_gen_srv::path_srvConfig &config, uint32_t level)
-{
-  cost_scalar = config.cost_scalar;
-  heuristic_scaler = config.heuristic_scaler;
-  ROS_INFO("cost scalar:%f  heuristic scalar:%f", cost_scalar, heuristic_scaler);
-}
 // path finding function,can be alternate to other algorithm like Dijstra
 uint16_t A_star_path_finding(int8_t map[Height][Width], uint16_t start_point[2], uint16_t end_point[2], uint16_t Path[length][fn])
 {
@@ -776,7 +798,7 @@ void find_avaiable_point(uint16_t point[2])
   } while (expend_index < 200);
 }
 
-bool map_rec_callback(path_gen_srv::path_gen_srv::Request &req, path_gen_srv::path_gen_srv::Response &res)
+bool map_rec_callback(multiple_rb_ctrl::dynamic_path_srv::Request &req, multiple_rb_ctrl::dynamic_path_srv::Response &res)
 {
 
   uint16_t Path[length][2];              // to store a path, can be changed to some variables array with no length declaration
@@ -785,14 +807,27 @@ bool map_rec_callback(path_gen_srv::path_gen_srv::Request &req, path_gen_srv::pa
   uint16_t start_point[2], end_point[2]; // transformed start point and end point
   uint16_t Path_length;
   nav_msgs::Path path;
+  int8_t map_to_use[Height][Width];
+  int8_t robot_coordinate[3][2];
 
-  start[0] = req.start_point.position.y; // row,which is y in grid map coordinate
-  start[1] = req.start_point.position.x;
+  start[0] = round_coor(Odom[req.robot_id - 1].pose.pose.position.y); // row,which is y in grid map coordinate
+  start[1] = round_coor(Odom[req.robot_id - 1].pose.pose.position.x);
 
   end[0] = req.goal.position.y;
   end[1] = req.goal.position.x;
 
+  // transform coordinate to grid coordinate
   Transform_coordinate(start, end, start_point, end_point);
+  ROS_INFO("%f %f %d %d ", start[0], start[1], start_point[0], start_point[1]);
+  // transform coordinate of robots
+  for (int i = 0; i < 4; i++)
+  {
+    if (i == req.robot_id - 1)
+      continue;
+    robot_coordinate[i][0] = (uint32_t)(Odom[i].pose.pose.position.y / 0.5 + 9);
+    robot_coordinate[i][1] = (uint32_t)(Odom[i].pose.pose.position.x / 0.5 + 9);
+  }
+  //
   uint16_t error_code = Check_start_end_point(map_arr, start_point, end_point);
   bool search_enable = false;
   if (error_code == 0)
@@ -826,11 +861,17 @@ bool map_rec_callback(path_gen_srv::path_gen_srv::Request &req, path_gen_srv::pa
   }
   if (search_enable == true)
   {
+    /*     get_obstacle_coor();
+
+    generate_occupied_map(map_arr, map_to_use, ); */
+
+    generate_occupied_map(map_arr, map_to_use, robot_coordinate, 3, req.robot_id);
+
     ROS_INFO("Start searching...");
-    start_time = clock();                                                     // start the clock ticking
-    Path_length = A_star_path_finding(map_arr, start_point, end_point, Path); // core function
-    end_time = clock();                                                       // stop ticking clock
-    ROS_INFO("Searching complete.");
+    start_time = clock();                                                        // start the clock ticking
+    Path_length = A_star_path_finding(map_to_use, start_point, end_point, Path); // core function
+    end_time = clock();                                                          // stop ticking clock
+    ROS_INFO("Searching complete. %ld", Path_length);
     switch (Path_length)
     {
     case 0:
@@ -873,11 +914,8 @@ bool map_rec_callback(path_gen_srv::path_gen_srv::Request &req, path_gen_srv::pa
       {
 
         poses[i].header.frame_id = "map";
-        /* 				poses[i].header.stamp = ros::Time::now();
-					poses[i].pose.orientation = tf::createQuaternionMsgFromYaw(0); */
         poses[i].pose.position.x = map_resolution * (Path[i][1] + x_bias);
         poses[i].pose.position.y = map_resolution * (Path[i][0] + y_bias);
-        /* 				poses[i].pose.position.z = 0; */
         path.poses.push_back(poses[i]);
       }
 #endif
@@ -897,22 +935,22 @@ bool map_rec_callback(path_gen_srv::path_gen_srv::Request &req, path_gen_srv::pa
 
 void odom_1_callback(const nav_msgs::Odometry odom)
 {
-  Odom1 = odom;
+  Odom[0] = odom;
 }
 
 void odom_2_callback(const nav_msgs::Odometry odom)
 {
-  Odom2 = odom;
+  Odom[1] = odom;
 }
 
 void odom_3_callback(const nav_msgs::Odometry odom)
 {
-  Odom3 = odom;
+  Odom[2] = odom;
 }
 
 void odom_4_callback(const nav_msgs::Odometry odom)
 {
-  Odom4 = odom;
+  Odom[3] = odom;
 }
 
 int main(int argc, char **argv)
@@ -925,6 +963,19 @@ int main(int argc, char **argv)
   ros::Subscriber odom_sub3 = nh.subscribe<nav_msgs::Odometry>("robot3/odom", 1, odom_3_callback);
   ros::Subscriber odom_sub4 = nh.subscribe<nav_msgs::Odometry>("robot4/odom", 1, odom_4_callback);
   generate_map();
+  Odom[0].pose.pose.position.x = 4.5;
+  Odom[0].pose.pose.position.y = 2;
+  Odom[0].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 3.14159);
+  Odom[1].pose.pose.position.x = 4.5;
+  Odom[1].pose.pose.position.y = 1;
+  Odom[1].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 3.14159);
+  Odom[2].pose.pose.position.x = 4.5;
+  Odom[2].pose.pose.position.y = -1;
+  Odom[2].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 3.14159);
+  Odom[3].pose.pose.position.x = 4.5;
+  Odom[3].pose.pose.position.y = -2;
+  Odom[3].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 3.14159);
+
   ROS_INFO("Path finder ready!");
   ros::spin();
   ROS_INFO("Program exiting.");

@@ -1,3 +1,4 @@
 uint8 robot_id
+geometry_msgs/Pose goal
 ---
-nav_msgs/Path path
+nav_msgs/Path Path

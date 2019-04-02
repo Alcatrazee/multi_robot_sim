@@ -60,6 +60,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    occupy_grid_srv.srv
    instruction_srv.srv
+   dynamic_path_srv.srv
 #   Service1.srv
 #   Service2.srv
  )
@@ -216,8 +217,8 @@ target_link_libraries(robot3 ${catkin_LIBRARIES})
 add_executable(robot4 src/robot4.cpp)
 target_link_libraries(robot4 ${catkin_LIBRARIES})
 
-add_executable(algor_test src/algor_test.cpp)
-target_link_libraries(algor_test ${catkin_LIBRARIES})
+add_executable(grid_authentication src/grid_authentication.cpp)
+target_link_libraries(grid_authentication ${catkin_LIBRARIES})
 
 add_executable(sechduler src/sechduler.cpp)
 target_link_libraries(sechduler ${catkin_LIBRARIES})
