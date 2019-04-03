@@ -86,6 +86,7 @@ float round_coor(float num_to_round);
 // map_to_copy is map to create
 void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], uint8_t current_id)
 {
+  static const uint8_t obs_distance = 2;
   // step 1. copy map
   for (int _row = 0; _row < 19; _row++)
   {
@@ -97,23 +98,26 @@ void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_
   // step 2. add robot occupied grid
   for (int used_robot_num = 0; used_robot_num < 4; used_robot_num++)
   {
-    if (used_robot_num != current_id - 1)
+    ROS_INFO("%d %d", robot_coor[used_robot_num][0], robot_coor[used_robot_num][1]);
+    if (used_robot_num == current_id - 1)
+      continue;
+    // only those are close enough will be treated as obstacles.
+    if (abs(robot_coor[used_robot_num][0] - robot_coor[current_id - 1][0]) <= obs_distance && abs(robot_coor[used_robot_num][1] - robot_coor[current_id - 1][1]) <= obs_distance)
+      map_to_copy[robot_coor[used_robot_num][0]][robot_coor[used_robot_num][1]] = obstacle_mark;
+    map_to_copy[spawn_pos[used_robot_num][0]][spawn_pos[used_robot_num][1]] = obstacle_mark;
+  }
+  // show map
+  if (current_id == 2)
+  {
+    for (int _row = 18; _row >= 0; _row--)
     {
-      // only those are close enough will be treated as obstacles.
-      if (abs(robot_coor[used_robot_num][0] - robot_coor[current_id - 1][0]) <= 2 && abs(robot_coor[used_robot_num][1] - robot_coor[current_id - 1][1]) <= 2)
-        map_to_copy[robot_coor[used_robot_num][0]][robot_coor[used_robot_num][1]] = obstacle_mark;
-      map_to_copy[spawn_pos[used_robot_num][0]][spawn_pos[used_robot_num][1]] = obstacle_mark;
+      for (int _col = 0; _col < 19; _col++)
+      {
+        printf("%5d", map_to_copy[_row][_col]);
+      }
+      cout << endl;
     }
   }
-  /*   // show map
-  for (int _row = 0; _row < 19; _row++)
-  {
-    for (int _col = 0; _col < 19; _col++)
-    {
-      printf("%3c", map_to_copy[_row][_col]);
-    }
-    cout << endl;
-  } */
 }
 
 float round_coor(float num_to_round)
@@ -830,8 +834,8 @@ bool map_rec_callback(multiple_rb_ctrl::dynamic_path_srv::Request &req, multiple
   // transform coordinate of robots
   for (int i = 0; i < 4; i++)
   {
-    robot_coordinate[i][0] = (uint32_t)(Odom[i].pose.pose.position.y / 0.5 + 9);
-    robot_coordinate[i][1] = (uint32_t)(Odom[i].pose.pose.position.x / 0.5 + 9);
+    robot_coordinate[i][0] = (uint32_t)(round(Odom[i].pose.pose.position.y / 0.5) + 9);
+    robot_coordinate[i][1] = (uint32_t)(round(Odom[i].pose.pose.position.x / 0.5) + 9);
   }
   //
   uint16_t error_code = Check_start_end_point(map_arr, start_point, end_point);

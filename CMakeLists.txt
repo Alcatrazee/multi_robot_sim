@@ -225,3 +225,6 @@ target_link_libraries(sechduler ${catkin_LIBRARIES})
 
 add_executable(path_planning src/path_planning.cpp)
 target_link_libraries(path_planning ${catkin_LIBRARIES})
+
+add_executable(timer_test src/timer_test.cpp)
+target_link_libraries(timer_test ${catkin_LIBRARIES})

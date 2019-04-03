@@ -12,9 +12,9 @@
 
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find multiple_rb_ctrl)config.rviz" />
 
-    <node name="occupy_node" pkg="multiple_rb_ctrl" type="grid_authentication" output="screen" />
+    <node name="occupy_node" pkg="multiple_rb_ctrl" type="grid_authentication" />
     
-     <group ns="robot1">
+    <group ns="robot1">
       <param name="robot_description"
               command="$(find xacro)/xacro.py $(find multiple_rb_ctrl)/urdf/model.xacro ns:=robot1 " />
       <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
@@ -26,10 +26,7 @@
         args="0 0 0 0 0 0 map robot1/odom 100" />   
     </group>
 
-    
-    
-    
-      <group ns="robot2">
+    <group ns="robot2">
       <param name="robot_description"
             command="$(find xacro)/xacro.py $(find multiple_rb_ctrl)/urdf/model.xacro ns:=robot2" />
       <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
@@ -41,7 +38,7 @@
         args="0 0 0 0 0 0 map robot2/odom 100" />   
     </group>
 
-  <group ns="robot3">
+    <group ns="robot3">
       <param name="robot_description"
             command="$(find xacro)/xacro.py $(find multiple_rb_ctrl)/urdf/model.xacro ns:=robot3" />
       <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
@@ -67,19 +64,19 @@
 
     
     <group ns="costmap">
-        <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/eroded_map.yaml" output="screen"  />
+        <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/eroded_map.yaml"   />
     </group>
 
     <group ns="origin_map">
-        <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/map.yaml" output="screen" />
+        <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/map.yaml" />
     </group>    
      
-    <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" output="screen" respawn="true" />
+    <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true" output="screen" />
 
-    <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" output="screen" />
-     <node name="robot2" pkg="multiple_rb_ctrl" type="robot2" output="screen" />
-   <node name="robot3" pkg="multiple_rb_ctrl" type="robot3" output="screen" />
-    <node name="robot4" pkg="multiple_rb_ctrl" type="robot4" output="screen" />
-    <node name="sechduler" pkg="multiple_rb_ctrl" type="sechduler" output="screen" />
+    <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" />
+     <node name="robot2" pkg="multiple_rb_ctrl" type="robot2"   />
+   <node name="robot3" pkg="multiple_rb_ctrl" type="robot3"  />
+    <node name="robot4" pkg="multiple_rb_ctrl" type="robot4" />
+    <node name="sechduler" pkg="multiple_rb_ctrl" type="sechduler"  />
 
 </launch>

@@ -39,6 +39,8 @@ nav_msgs::Odometry g_odom;
 
 ros::ServiceClient Client_grid;
 
+uint8_t timer_counter = 0;
+
 float transform_world_to_robot(const nav_msgs::Odometry odom, float target_pos[2], float robot_coor[2])
 {
   float angle = atan2(2 * (odom.pose.pose.orientation.w * odom.pose.pose.orientation.z + odom.pose.pose.orientation.x * odom.pose.pose.orientation.y), 1 - 2 * (odom.pose.pose.orientation.y * odom.pose.pose.orientation.y + odom.pose.pose.orientation.z * odom.pose.pose.orientation.z));
@@ -153,6 +155,11 @@ void process_fcn(void)
       // set twist
       output_az = angle_in_robot;
       output_vx = distance * 1.5;
+      // if next point is not at the front, then steer first.
+      if (abs(angle_in_robot) >= deg2rad(30))
+      {
+        robot_state = rotate;
+      }
       // request for next move
       if (distance <= close_distance && path_ptr > 0)
       {
@@ -253,6 +260,7 @@ void process_fcn(void)
       output_az = 0;
       temp_coor[0] = path.poses[path_ptr - 1].pose.position.x;
       temp_coor[1] = path.poses[path_ptr - 1].pose.position.y;
+      ROS_INFO("waiting");
       if (apply_for_grid_occupation(temp_coor, true))
       {
         if (path_ptr < path.poses.size() - 1)
@@ -266,6 +274,12 @@ void process_fcn(void)
         path_ptr--;
         robot_state = moving_forth;
       }
+      else if (timer_counter >= 7)
+      {
+        new_goal = true;
+        timer_counter = 0;
+        ROS_INFO("done waiting...");
+      }
       break;
     }
   }
@@ -275,6 +289,10 @@ void process_fcn(void)
     output_az = 0;
     output_vx = 0;
   }
+
+  if (robot_state != wait_mode)
+    timer_counter = 0;
+  ROS_INFO("%d", timer_counter);
 
   // velocity limitation
   if (output_az > max_av)
@@ -292,6 +310,11 @@ void process_fcn(void)
   /* ROS_INFO("%f %f", path.poses[path_ptr].pose.position.x, path.poses[path_ptr].pose.position.y); */
 }
 
+void timer_callback(const ros::TimerEvent &)
+{
+  timer_counter++;
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "robot2");
@@ -303,6 +326,7 @@ int main(int argc, char **argv)
   ros::ServiceClient client = nh.serviceClient<multiple_rb_ctrl::dynamic_path_srv>("path_server");
   ros::ServiceClient instruction_client = nh.serviceClient<multiple_rb_ctrl::instruction_srv>("instruction_server");
   Client_grid = nh.serviceClient<multiple_rb_ctrl::occupy_grid_srv>("occupy_grid", true);
+  ros::Timer timer = nh.createTimer(ros::Duration(1), timer_callback);
   ros::Rate rate(100);
   geometry_msgs::Twist twist1;
   while (!Client_grid)
@@ -323,7 +347,6 @@ int main(int argc, char **argv)
   robot_state = stop;
   new_goal = false;
   order_received = false;
-
   ROS_INFO("robot2 controller start!");
   while (ros::ok())
   {
@@ -331,7 +354,6 @@ int main(int argc, char **argv)
     {
       ROS_INFO("requesting new goal");
       bool succ = instruction_client.call(instruction_req);
-      ROS_INFO("%d", succ);
       if (succ)
       {
         path_req.request.goal.position.x = instruction_req.response.new_goal.x;
@@ -358,16 +380,16 @@ int main(int argc, char **argv)
         target_to_apply[1] = path.poses[path_ptr + 1].pose.position.y;
         // apply for next point if failed , stop and wait
         apply_for_grid_occupation(target_to_apply, false);
-        target_to_apply[0] = path.poses[path_ptr].pose.position.x;
+        /*target_to_apply[0] = path.poses[path_ptr].pose.position.x;
         target_to_apply[1] = path.poses[path_ptr].pose.position.y;
-        apply_for_grid_occupation(target_to_apply, false);
+        apply_for_grid_occupation(target_to_apply, false); */
       }
       if (client.call(path_req))
       {
         ROS_INFO("request for path");
         order_received = true;
         path = path_req.response.Path;
-        path_ptr = path.poses.size() - 1;
+        path_ptr = path.poses.size() - 2;
         robot_state = moving_forth;
       }
       else
