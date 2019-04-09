@@ -74,8 +74,8 @@
     <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true" output="screen" />
 
     <node name="robot1" pkg="multiple_rb_ctrl" type="robot1" />
-     <node name="robot2" pkg="multiple_rb_ctrl" type="robot2"   />
-   <node name="robot3" pkg="multiple_rb_ctrl" type="robot3"  />
+    <node name="robot2" pkg="multiple_rb_ctrl" type="robot2"   />
+    <node name="robot3" pkg="multiple_rb_ctrl" type="robot3"  />
     <node name="robot4" pkg="multiple_rb_ctrl" type="robot4" />
     <node name="sechduler" pkg="multiple_rb_ctrl" type="sechduler"  />
 

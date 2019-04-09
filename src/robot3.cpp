@@ -197,7 +197,7 @@ void process_fcn(void)
         }
       }
       // close to next point
-      if (distance <= 0.01)
+      if (distance <= 0.03)
       {
 
         // end

@@ -197,7 +197,7 @@ void process_fcn(void)
         }
       }
       // close to next point
-      if (distance <= 0.05)
+      if (distance <= 0.03)
       {
         // end
         if (path_ptr == 0)
@@ -274,7 +274,7 @@ void process_fcn(void)
         path_ptr--;
         robot_state = moving_forth;
       }
-      else if (timer_counter >= 9)
+      else if (timer_counter >= 10)
       {
         new_goal = true;
         timer_counter = 0;

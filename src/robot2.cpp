@@ -196,7 +196,7 @@ void process_fcn(void)
         }
       }
       // close to next point
-      if (distance <= 0.01)
+      if (distance <= 0.03)
       {
 
         // end
@@ -274,7 +274,7 @@ void process_fcn(void)
         path_ptr--;
         robot_state = moving_forth;
       }
-      else if (timer_counter >= 7)
+      else if (timer_counter >= 6)
       {
         new_goal = true;
         timer_counter = 0;
@@ -292,7 +292,6 @@ void process_fcn(void)
 
   if (robot_state != wait_mode)
     timer_counter = 0;
-  ROS_INFO("%d", timer_counter);
 
   // velocity limitation
   if (output_az > max_av)

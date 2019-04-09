@@ -197,7 +197,7 @@ void process_fcn(void)
         }
       }
       // close to next point
-      if (distance <= 0.01)
+      if (distance <= 0.03)
       {
 
         // end
@@ -275,7 +275,7 @@ void process_fcn(void)
         path_ptr--;
         robot_state = moving_forth;
       }
-      else if (timer_counter >= 5)
+      else if (timer_counter >= 4)
       {
         new_goal = true;
         timer_counter = 0;
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
   ros::ServiceClient client = nh.serviceClient<multiple_rb_ctrl::dynamic_path_srv>("/path_server");
   ros::ServiceClient instruction_client = nh.serviceClient<multiple_rb_ctrl::instruction_srv>("/instruction_server");
   Client_grid = nh.serviceClient<multiple_rb_ctrl::occupy_grid_srv>("/occupy_grid", true);
-  ros::Timer timer = nh.createTimer(ros::Duration(5), timer_callback);
+  ros::Timer timer = nh.createTimer(ros::Duration(1), timer_callback);
   ros::Rate rate(100);
   geometry_msgs::Twist twist1;
   while (!Client_grid)
