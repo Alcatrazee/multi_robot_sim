@@ -86,7 +86,7 @@ float round_coor(float num_to_round);
 // map_to_copy is map to create
 void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], uint8_t current_id)
 {
-  static const uint8_t obs_distance = 3;
+  static const uint8_t obs_distance = 4;
   // step 1. copy map
   for (int _row = 0; _row < 19; _row++)
   {
@@ -107,7 +107,7 @@ void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_
     map_to_copy[spawn_pos[used_robot_num][0]][spawn_pos[used_robot_num][1]] = obstacle_mark;
   }
   // show map
-/*   if (current_id == 2)
+  /*   if (current_id == 2)
   {
     for (int _row = 18; _row >= 0; _row--)
     {

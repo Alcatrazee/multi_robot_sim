@@ -71,12 +71,12 @@
         <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/map.yaml" />
     </group>    
      
-    <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true" />
+    <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true" output="screen"/>
 
-    <node name="robot1_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot1" />
-    <node name="robot2_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot2" />
-    <node name="robot3_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot3" launch-prefix="xterm -e" />
-    <node name="robot4_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot4" />
+    <node name="robot1_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot1" output="screen" launch-prefix="xterm -e"/>
+    <node name="robot2_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot2" output="screen" launch-prefix="xterm -e"/>
+    <node name="robot3_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot3" output="screen" launch-prefix="xterm  -e"/>
+    <node name="robot4_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot4" output="screen" launch-prefix="xterm  -e"/>
     <node name="sechduler" pkg="multiple_rb_ctrl" type="sechduler"  />
 
 </launch>

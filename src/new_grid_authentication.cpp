@@ -28,12 +28,12 @@ public:
   // check if the grid is occupied or not or preoccupied
   uint8_t check_if_occupied(uint32_t point[2], int64_t who)
   {
-    if (_occupied[point[0]][point[1]] == occupy)
+    if (_occupied[point[0]][point[1]] == occupy || _occupied[point[0]][point[1]] == preoccupy)
     {
       if (_occupied_by_who[point[0]][point[1]] == who)
         return unoccupied;
       else
-        return occupy;
+        return _occupied[point[0]][point[1]];
     }
     else
       return _occupied[point[0]][point[1]];
@@ -119,8 +119,8 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
     int point_next_state = Ocg.check_if_occupied(point_next, req.applier);
     int point_next_next_state = Ocg.check_if_occupied(point_next_next, req.applier);
     int point_state_combine = (point_next_state << 4) + point_next_next_state;
-    if(req.applier==3)
-      ROS_INFO("%d %d %d %d %d", point_next[0],point_next[1],point_next_state, point_next_next_state, req.applier);
+    if (req.applier == 3)
+      ROS_INFO("%d %d %d %d %d", point_next[0], point_next[1], point_next_state, point_next_next_state, req.applier);
     // switch here
     switch (point_state_combine)
     {
@@ -166,11 +166,10 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
       res.operation = go_ahead;
       break;
     }
-/*     ROS_INFO("%d %d %d %d ", point_next[0], point_next[1], point_next_next[0], point_next_next[1] ); */
+    /*     ROS_INFO("%d %d %d %d ", point_next[0], point_next[1], point_next_next[0], point_next_next[1] ); */
   }
 
-
-  if (req.operation == occupy && req.applier==3)
+  if (req.operation == occupy && req.applier == 3)
   {
     for (int row = 19; row >= 0; row--)
     {

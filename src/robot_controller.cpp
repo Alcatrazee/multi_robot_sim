@@ -180,15 +180,108 @@ void process_fcn(void)
         robot_state = rotate;
       }
       // request for next move
-      if (distance <= close_distance && path_ptr > 0)
+      if (distance <= close_distance)
       {
         geometry_msgs::Point next_target;
         float next_point_angle = 0;
         next_target.x = path.poses[path_ptr - 1].pose.position.x;
         next_target.y = path.poses[path_ptr - 1].pose.position.y;
         next_point_angle = transform_world_to_robot(g_odom, next_target, tar_in_rb_frame);
+        if (distance <= 0.03)
+        {
+          // close to next point
+          // release last point as long as robot reaches next point
+          if (path_ptr < path.poses.size() - 1)
+          {
+            geometry_msgs::Point last_target;
+            last_target.x = path.poses[path_ptr + 1].pose.position.x;
+            last_target.y = path.poses[path_ptr + 1].pose.position.y;
+            apply_for_grid_occupation(last_target, release);
+          }
+          //close to the end
+          if (path_ptr == 0)
+          {
+            robot_state = stop_mode;
+            output_vx = 0;
+            output_az = 0;
+            geometry_msgs::Point last_target;
+            last_target.x = path.poses[path_ptr + 1].pose.position.x;
+            last_target.y = path.poses[path_ptr + 1].pose.position.y;
+            apply_for_grid_occupation(last_target, false);
+            order_received = false;
+          }
+          else
+          {
+            // closed to next point and needs to change direction
+            output_vx = 0;
+            if (abs(g_odom.twist.twist.linear.x <= 0.01))
+            {
+              // there're multiple waypoints left
+              if (path_ptr >= 2)
+              {
+                output_vx = 0;
+                robot_state = rotate;
+                geometry_msgs::Point next_target_arr[2];
+                next_target_arr[0].x = path.poses[path_ptr - 1].pose.position.x;
+                next_target_arr[0].y = path.poses[path_ptr - 1].pose.position.y;
+                next_target_arr[1].x = path.poses[path_ptr - 2].pose.position.x;
+                next_target_arr[1].y = path.poses[path_ptr - 2].pose.position.y;
+                // apply for next point if failed , stop_mode and wait
+                uint8_t result = apply_for_grid_occupation(next_target_arr);
+                if (result == go_ahead)
+                {
+                  path_ptr--;
+                  ROS_INFO("3 apply approved ptr--");
+                }
+                else if (result == wait)
+                {
+                  ROS_INFO("service blocked,waitting");
+                  output_vx = 0;
+                  output_az = 0;
+                  robot_state = wait_mode;
+                }
+                else if (result == change_route)
+                {
+                  output_vx = 0;
+                  output_az = 0;
+                  robot_state = stop_mode;
+                }
+              }
+              // only ptr 0 and 1 or only 0 left
+              else
+              {
+                output_vx = 0;
+                robot_state = rotate;
+                geometry_msgs::Point next_target;
+                next_target.x = path.poses[path_ptr - 1].pose.position.x;
+                next_target.y = path.poses[path_ptr - 1].pose.position.y;
+                uint8_t result = apply_for_grid_occupation(next_target, true);
+                // apply for next point if failed , stop_mode and wait
+                if (result == go_ahead)
+                {
+                  /* if (path_ptr < path.poses.size() - 1)
+                {
+                  geometry_msgs::Point last_target;
+                  last_target.x = path.poses[path_ptr + 1].pose.position.x;
+                  last_target.y = path.poses[path_ptr + 1].pose.position.y;
+                  apply_for_grid_occupation(last_target, release);
+                } */
+                  // application approved
+                  path_ptr--;
+                  ROS_INFO("4 apply approved ptr--");
+                } //wait
+                else if (result == wait)
+                {
+                  output_vx = 0;
+                  robot_state = stop_mode;
+                  ROS_INFO("service blocked,waitting");
+                }
+              }
+            }
+          }
+        }
         // if next point is in front
-        if (abs(next_point_angle) <= deg2rad(5))
+        else if (abs(next_point_angle) <= deg2rad(5))
         {
           // next next point is in front
           // apply for next next point
@@ -256,98 +349,6 @@ void process_fcn(void)
               output_vx = 0;
               output_az = 0;
               robot_state = wait_mode;
-            }
-          }
-        }
-      }
-      if (distance <= 0.03)
-      {
-        // close to next point
-        // end
-        if (path_ptr == 0)
-        {
-          robot_state = stop_mode;
-          output_vx = 0;
-          output_az = 0;
-          geometry_msgs::Point last_target;
-          last_target.x = path.poses[path_ptr + 1].pose.position.x;
-          last_target.y = path.poses[path_ptr + 1].pose.position.y;
-          apply_for_grid_occupation(last_target, false);
-          order_received = false;
-        }
-        else
-        {
-          // closed to next point and needs to change direction
-          output_vx = 0;
-          if (abs(g_odom.twist.twist.linear.x <= 0.01))
-          {
-            // there're multiple waypoints left
-            if (path_ptr >= 2)
-            {
-              output_vx = 0;
-              robot_state = rotate;
-              geometry_msgs::Point next_target_arr[2];
-              next_target_arr[0].x = path.poses[path_ptr - 1].pose.position.x;
-              next_target_arr[0].y = path.poses[path_ptr - 1].pose.position.y;
-              next_target_arr[1].x = path.poses[path_ptr - 2].pose.position.x;
-              next_target_arr[1].y = path.poses[path_ptr - 2].pose.position.y;
-              // apply for next point if failed , stop_mode and wait
-              uint8_t result = apply_for_grid_occupation(next_target_arr);
-              if (result == go_ahead)
-              {
-                if (path_ptr < path.poses.size() - 1)
-                {
-                  geometry_msgs::Point last_target;
-                  last_target.x = path.poses[path_ptr + 1].pose.position.x;
-                  last_target.y = path.poses[path_ptr + 1].pose.position.y;
-                  apply_for_grid_occupation(last_target, release);
-                }
-                path_ptr--;
-                ROS_INFO("3 apply approved ptr--");
-              }
-              else if (result == wait)
-              {
-                ROS_INFO("service blocked,waitting");
-                output_vx = 0;
-                output_az = 0;
-                robot_state = wait_mode;
-              }
-              else if (result == change_route)
-              {
-                output_vx = 0;
-                output_az = 0;
-                robot_state = stop_mode;
-              }
-            }
-            // only ptr 0 and 1 or only 0 left
-            else
-            {
-              output_vx = 0;
-              robot_state = rotate;
-              geometry_msgs::Point next_target;
-              next_target.x = path.poses[path_ptr - 1].pose.position.x;
-              next_target.y = path.poses[path_ptr - 1].pose.position.y;
-              uint8_t result = apply_for_grid_occupation(next_target, true);
-              // apply for next point if failed , stop_mode and wait
-              if (result == go_ahead)
-              {
-                if (path_ptr < path.poses.size() - 1)
-                {
-                  geometry_msgs::Point last_target;
-                  last_target.x = path.poses[path_ptr + 1].pose.position.x;
-                  last_target.y = path.poses[path_ptr + 1].pose.position.y;
-                  apply_for_grid_occupation(last_target, release);
-                }
-                // application approved
-                path_ptr--;
-                ROS_INFO("4 apply approved ptr--");
-              } //wait
-              else if (result == wait)
-              {
-                output_vx = 0;
-                robot_state = stop_mode;
-                ROS_INFO("service blocked,waitting");
-              }
             }
           }
         }
@@ -571,9 +572,25 @@ int main(int argc, char **argv)
         target_to_apply.x = path.poses[path_ptr + 1].pose.position.x;
         target_to_apply.y = path.poses[path_ptr + 1].pose.position.y;
         apply_for_grid_occupation(target_to_apply, release);
-        /* target_to_apply.x = path.poses[path_ptr].pose.position.x;
-        target_to_apply.y = path.poses[path_ptr].pose.position.y;
-        apply_for_grid_occupation(target_to_apply, false); */
+
+        target_to_apply.x = path.poses[path_ptr - 1].pose.position.x;
+        target_to_apply.y = path.poses[path_ptr - 1].pose.position.y;
+        apply_for_grid_occupation(target_to_apply, release);
+
+        // only release the point when it's too far
+        /* geometry_msgs::Point current_target;
+        float tar_in_rb_frame[2];
+        float distance = 0;
+        // set current target(global frame)
+        current_target.x = path.poses[path_ptr].pose.position.x;
+        current_target.y = path.poses[path_ptr].pose.position.y;
+        // get current target(robot frame)
+        transform_world_to_robot(g_odom, current_target, tar_in_rb_frame);
+        distance = sqrt(tar_in_rb_frame[0] * tar_in_rb_frame[0] + tar_in_rb_frame[1] * tar_in_rb_frame[1]);
+        if (distance > 0.2)
+        {
+          apply_for_grid_occupation(current_target, release);
+        } */
       }
       if (client.call(path_req))
       {
