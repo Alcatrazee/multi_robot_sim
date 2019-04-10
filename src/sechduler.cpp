@@ -167,7 +167,7 @@ bool server_callback(multiple_rb_ctrl::instruction_srv::Request &req, multiple_r
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "command_node");
+  ros::init(argc, argv, "sechduler_node");
   ros::NodeHandle nh;
   ros::ServiceServer server = nh.advertiseService("instruction_server", server_callback);
   ROS_INFO("instruction server ready...");

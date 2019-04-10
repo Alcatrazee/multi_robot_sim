@@ -14,7 +14,7 @@
 
     <node name="occupy_node" pkg="multiple_rb_ctrl" type="new_grid_authentication" output="screen" />
     
-    <!-- <group ns="robot1">
+    <group ns="robot1">
       <param name="robot_description"
               command="$(find xacro)/xacro.py $(find multiple_rb_ctrl)/urdf/model.xacro ns:=robot1 " />
       <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
@@ -48,7 +48,7 @@
           args="-urdf -model robot3 -param robot_description -x 4.5 -y -1.0 -z 0.05 -Y 3.14159 "/>
       <node pkg="tf" type="static_transform_publisher" name="map2rb3"
         args="0 0 0 0 0 0 map robot3/odom 100" />   
-    </group> -->
+    </group>
     
     <group ns="robot4">
       <param name="robot_description"
@@ -73,10 +73,10 @@
      
     <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true" />
 
-<!--     <node name="robot1_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot1" />
+    <node name="robot1_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot1" />
     <node name="robot2_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot2" />
-    <node name="robot3_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot3" />
-    <node name="robot4_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot4" /> -->
+    <node name="robot3_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot3" launch-prefix="xterm -e" />
+    <node name="robot4_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot4" />
     <node name="sechduler" pkg="multiple_rb_ctrl" type="sechduler"  />
 
 </launch>

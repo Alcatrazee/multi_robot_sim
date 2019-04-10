@@ -52,6 +52,8 @@ uint8_t robot_id_code = 0;
 
 uint8_t timer_counter = 0;
 
+uint8_t blocked_time=0;
+
 float transform_world_to_robot(const nav_msgs::Odometry odom, const geometry_msgs::Point target_pos, float robot_coor[2])
 {
   float angle = atan2(2 * (odom.pose.pose.orientation.w * odom.pose.pose.orientation.z + odom.pose.pose.orientation.x * odom.pose.pose.orientation.y), 1 - 2 * (odom.pose.pose.orientation.y * odom.pose.pose.orientation.y + odom.pose.pose.orientation.z * odom.pose.pose.orientation.z));
@@ -104,9 +106,6 @@ uint8_t apply_for_grid_occupation(geometry_msgs::Point grid_coor[2])
   ROS_INFO("ask with 2 points");
   if (Client_grid.call(req))
   {
-    if (robot_id_code == 3)
-      if (req.response.operation == wait)
-        ROS_INFO("%d", req.response.operation);
     return req.response.operation;
   }
   else
@@ -126,9 +125,6 @@ uint8_t apply_for_grid_occupation(geometry_msgs::Point grid_coor, bool ocp_or_di
   ROS_INFO("ask to release or with one point");
   if (Client_grid.call(req))
   {
-    if (robot_id_code == 3)
-      if (req.response.operation == wait)
-        ROS_INFO("%d", req.response.operation);
     return req.response.operation;
   }
   else
@@ -171,7 +167,7 @@ void process_fcn(void)
     // get current target(robot frame)
     angle_in_robot = transform_world_to_robot(g_odom, current_target, tar_in_rb_frame);
     distance = sqrt(tar_in_rb_frame[0] * tar_in_rb_frame[0] + tar_in_rb_frame[1] * tar_in_rb_frame[1]);
-    ROS_INFO("distance: %f path_ptr:%d robot_state%d",distance,path_ptr,robot_state);
+    /* ROS_INFO("distance: %f path_ptr:%d robot_state%d",distance,path_ptr,robot_state); */
     // FSM
     if (robot_state == moving_forth)
     {
@@ -204,7 +200,6 @@ void process_fcn(void)
             next_target_array[1].x = path.poses[path_ptr - 2].pose.position.x;
             next_target_array[1].y = path.poses[path_ptr - 2].pose.position.y;
             uint8_t result = apply_for_grid_occupation(next_target_array);
-            ROS_INFO("ask");
             if (result == go_ahead)
             {
               geometry_msgs::Point last_target;
@@ -213,6 +208,7 @@ void process_fcn(void)
               apply_for_grid_occupation(last_target, release);
               // application approved
               path_ptr--;
+              ROS_INFO("1 apply approved ptr--");
             }
             else if (result == wait)
             {
@@ -240,6 +236,7 @@ void process_fcn(void)
               last_target.y = path.poses[path_ptr + 1].pose.position.y;
               apply_for_grid_occupation(last_target, release);
               path_ptr--;
+              ROS_INFO("2 apply approved ptr--");
             }
             else if (result == wait)
             {
@@ -275,8 +272,8 @@ void process_fcn(void)
         else
         {
           // closed to next point and needs to change direction
-          output_vx = -0.5;
-          if (abs(g_odom.twist.twist.linear.x <= 0.1))
+          output_vx = 0;
+          if (abs(g_odom.twist.twist.linear.x <= 0.01))
           {
             // there're multiple waypoints left
             if (path_ptr >= 2)
@@ -297,6 +294,7 @@ void process_fcn(void)
                 last_target.y = path.poses[path_ptr + 1].pose.position.y;
                 apply_for_grid_occupation(last_target, release);
                 path_ptr--;
+                ROS_INFO("3 apply approved ptr--");
               }
               else if (result == wait)
               {
@@ -330,6 +328,7 @@ void process_fcn(void)
                 apply_for_grid_occupation(last_target, release);
                 // application approved
                 path_ptr--;
+                ROS_INFO("4 apply approved ptr--");
               } //wait
               else if(result == wait)
               {
@@ -372,6 +371,8 @@ void process_fcn(void)
           last_target.y = path.poses[path_ptr + 1].pose.position.y;
           apply_for_grid_occupation(last_target, release);
           path_ptr--;
+          ROS_INFO("5 apply approved ptr--");
+          robot_state = moving_forth;
         }
         else if (result == wait)
         {
@@ -395,7 +396,6 @@ void process_fcn(void)
         next_target.y = path.poses[path_ptr - 1].pose.position.y;
         ROS_INFO("waiting");
         uint8_t result = apply_for_grid_occupation(next_target, true);
-
         if (result == go_ahead)
         {
           geometry_msgs::Point last_target;
@@ -403,6 +403,7 @@ void process_fcn(void)
           last_target.y = path.poses[path_ptr + 1].pose.position.y;
           apply_for_grid_occupation(last_target, release);
           path_ptr--;
+          ROS_INFO("6 apply approved ptr--");
         }
         else if (result == wait)
         {
@@ -418,7 +419,7 @@ void process_fcn(void)
           robot_state = stop_mode;
         }
       }
-    if (timer_counter >= 10)
+    if (timer_counter >= blocked_time)
         {
           new_goal = true;
           timer_counter = 0;
@@ -468,7 +469,6 @@ int main(int argc, char **argv)
   string robot_code = argv[1];
   char *id = &argv[1][5];
   robot_id_code = atoi(id);
-  ROS_INFO("%d", robot_id_code);
 
   ros::init(argc, argv, robot_code);
   ros::NodeHandle nh;
@@ -492,15 +492,19 @@ int main(int argc, char **argv)
   {
   case 1:
     g_odom.pose.pose.position.y = 2;
+    blocked_time = 5;
     break;
   case 2:
     g_odom.pose.pose.position.y = 1;
+    blocked_time = 7;
     break;
   case 3:
     g_odom.pose.pose.position.y = -1;
+    blocked_time = 9;
     break;
   case 4:
     g_odom.pose.pose.position.y = -2;
+    blocked_time = 10;
     break;
   }
   g_odom.pose.pose.position.x = 4.5;
@@ -514,7 +518,7 @@ int main(int argc, char **argv)
   robot_state = stop_mode;
   new_goal = false;
   order_received = false;
-  ROS_INFO("%s controller start!", robot_code);
+  ROS_INFO("robot%d controller start!", robot_id_code);
   while (ros::ok())
   {
     if (robot_state == stop_mode && new_goal == false && order_received == false)

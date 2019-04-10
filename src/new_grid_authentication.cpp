@@ -24,9 +24,9 @@ private:
 
 public:
   uint8_t _occupied[19][19];
-  uint8_t _occupied_by_who[19][19];
+  int64_t _occupied_by_who[19][19];
   // check if the grid is occupied or not or preoccupied
-  uint8_t check_if_occupied(uint32_t point[2], uint8_t who)
+  uint8_t check_if_occupied(uint32_t point[2], int64_t who)
   {
     if (_occupied[point[0]][point[1]] == occupy)
     {
@@ -39,13 +39,13 @@ public:
       return _occupied[point[0]][point[1]];
   }
   // check who has occupied the grid
-  uint8_t check_occupied_by_who(uint32_t point[2])
+  inline uint8_t check_occupied_by_who(uint32_t point[2])
   {
     return _occupied_by_who[point[0]][point[1]];
   }
 
   // operation 1: occupy operation 2: preoccupy
-  bool set_occupied(uint8_t operation, uint32_t point[2], uint8_t who)
+  bool set_occupied(uint8_t operation, uint32_t point[2], int64_t who)
   {
     if (operation == preoccupy)
     {
@@ -119,7 +119,8 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
     int point_next_state = Ocg.check_if_occupied(point_next, req.applier);
     int point_next_next_state = Ocg.check_if_occupied(point_next_next, req.applier);
     int point_state_combine = (point_next_state << 4) + point_next_next_state;
-    /*     ROS_INFO("%d %d %x %d", point_next_state, point_next_next_state, point_state_combine, req.applier); */
+    if(req.applier==3)
+      ROS_INFO("%d %d %d %d %d", point_next[0],point_next[1],point_next_state, point_next_next_state, req.applier);
     // switch here
     switch (point_state_combine)
     {
@@ -144,7 +145,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
     case 0x11:
       ROS_INFO("Opposite direction conflict detected.");
       if (Ocg.check_occupied_by_who(point_next) == Ocg.check_occupied_by_who(point_next_next))
-        res.operation = wait;
+        res.operation = change_route;
       else
         res.operation = wait; // require changes
       break;
@@ -158,17 +159,18 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
       break;
     case 0x21:
       Ocg.set_occupied(occupy, point_next, req.applier);
-      res.operation = change_route;
+      res.operation = wait;
       break;
     case 0x22:
       Ocg.set_occupied(occupy, point_next, req.applier);
       res.operation = go_ahead;
       break;
     }
-    ROS_INFO("%d %d %d %d %d", point_next[0], point_next[1], point_next_next[0], point_next_next[1], res.operation);
+/*     ROS_INFO("%d %d %d %d ", point_next[0], point_next[1], point_next_next[0], point_next_next[1] ); */
   }
 
-  if (req.operation == occupy)
+
+  if (req.operation == occupy && req.applier==3)
   {
     for (int row = 19; row >= 0; row--)
     {
@@ -194,7 +196,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "scehdule_node");
+  ros::init(argc, argv, "grid_authentication_node");
   ros::NodeHandle nh;
   ros::ServiceServer server = nh.advertiseService("/occupy_grid", server_callback);
   ros::spin();
