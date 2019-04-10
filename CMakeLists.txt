@@ -205,26 +205,29 @@ include_directories(
 # catkin_add_nosetests(test)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
-add_executable(robot1 src/robot1.cpp)
-target_link_libraries(robot1 ${catkin_LIBRARIES})
+add_executable(robot_controller src/robot_controller.cpp)
+target_link_libraries(robot_controller ${catkin_LIBRARIES})
 
-add_executable(robot2 src/robot2.cpp)
-target_link_libraries(robot2 ${catkin_LIBRARIES})
+# add_executable(robot2 src/robot2.cpp)
+# target_link_libraries(robot2 ${catkin_LIBRARIES})
 
-add_executable(robot3 src/robot3.cpp)
-target_link_libraries(robot3 ${catkin_LIBRARIES})
+# add_executable(robot3 src/robot3.cpp)
+# target_link_libraries(robot3 ${catkin_LIBRARIES})
 
-add_executable(robot4 src/robot4.cpp)
-target_link_libraries(robot4 ${catkin_LIBRARIES})
+# add_executable(robot4 src/robot4.cpp)
+# target_link_libraries(robot4 ${catkin_LIBRARIES})
 
-add_executable(grid_authentication src/grid_authentication.cpp)
-target_link_libraries(grid_authentication ${catkin_LIBRARIES})
+# add_executable(grid_authentication src/grid_authentication.cpp)
+# target_link_libraries(grid_authentication ${catkin_LIBRARIES})
 
-add_executable(sechduler src/sechduler.cpp)
-target_link_libraries(sechduler ${catkin_LIBRARIES})
+# add_executable(sechduler src/sechduler.cpp)
+# target_link_libraries(sechduler ${catkin_LIBRARIES})
 
-add_executable(path_planning src/path_planning.cpp)
-target_link_libraries(path_planning ${catkin_LIBRARIES})
+# add_executable(path_planning src/path_planning.cpp)
+# target_link_libraries(path_planning ${catkin_LIBRARIES})
 
-add_executable(timer_test src/timer_test.cpp)
-target_link_libraries(timer_test ${catkin_LIBRARIES})
+# add_executable(timer_test src/timer_test.cpp)
+# target_link_libraries(timer_test ${catkin_LIBRARIES})
+
+add_executable(new_grid_authentication src/new_grid_authentication.cpp)
+target_link_libraries(new_grid_authentication ${catkin_LIBRARIES})

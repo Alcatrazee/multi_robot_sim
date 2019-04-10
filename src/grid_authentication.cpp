@@ -73,8 +73,8 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
   uint32_t point[2];
   clock_t start_time, end_time;
   static Occupied_grid_map Ocg;
-  point[0] = (uint32_t)(req.point_to_apply.y / 0.5 + 9);
-  point[1] = (uint32_t)(req.point_to_apply.x / 0.5 + 9);
+  point[0] = (uint32_t)(req.point_to_apply[0].y / 0.5 + 9);
+  point[1] = (uint32_t)(req.point_to_apply[0].x / 0.5 + 9);
   ROS_INFO("received request");
   if (req.operation == occupy)
   {

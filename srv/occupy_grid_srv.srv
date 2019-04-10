@@ -1,5 +1,5 @@
-geometry_msgs/Point point_to_apply
+geometry_msgs/Point[] point_to_apply
 bool operation
 int64 applier
 ---
-bool succeed_or_not
+uint8 operation
