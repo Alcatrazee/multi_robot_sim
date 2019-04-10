@@ -145,7 +145,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
     case 0x11:
       ROS_INFO("Opposite direction conflict detected.");
       if (Ocg.check_occupied_by_who(point_next) == Ocg.check_occupied_by_who(point_next_next))
-        res.operation = change_route;
+        res.operation = wait;
       else
         res.operation = wait; // require changes
       break;
@@ -159,7 +159,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
       break;
     case 0x21:
       Ocg.set_occupied(occupy, point_next, req.applier);
-      res.operation = wait;
+      res.operation = change_route;
       break;
     case 0x22:
       Ocg.set_occupied(occupy, point_next, req.applier);
