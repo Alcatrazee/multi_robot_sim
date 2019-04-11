@@ -86,7 +86,7 @@ float round_coor(float num_to_round);
 // map_to_copy is map to create
 void generate_occupied_map(const int8_t using_map[Height][Width], int8_t map_to_copy[Height][Width], int8_t robot_coor[4][2], uint8_t current_id)
 {
-  static const uint8_t obs_distance = 4;
+  static const uint8_t obs_distance = 5;
   // step 1. copy map
   for (int _row = 0; _row < 19; _row++)
   {

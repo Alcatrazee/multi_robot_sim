@@ -28,7 +28,14 @@ public:
   // check if the grid is occupied or not or preoccupied
   uint8_t check_if_occupied(uint32_t point[2], int64_t who)
   {
-    if (_occupied[point[0]][point[1]] == occupy || _occupied[point[0]][point[1]] == preoccupy)
+    /* if (_occupied[point[0]][point[1]] == occupy || _occupied[point[0]][point[1]] == preoccupy)
+    {
+      if (_occupied_by_who[point[0]][point[1]] == who)
+        return unoccupied;
+      else
+        return _occupied[point[0]][point[1]];
+    } */
+    if (_occupied[point[0]][point[1]] == occupy)
     {
       if (_occupied_by_who[point[0]][point[1]] == who)
         return unoccupied;
@@ -60,10 +67,13 @@ public:
     return true;
   }
   // set the grid to unoccupied state
-  bool set_disoccupy(uint32_t point[2])
+  bool set_disoccupy(uint32_t point[2],int64_t who)
   {
-    _occupied[point[0]][point[1]] = unoccupied;
-    _occupied_by_who[point[0]][point[1]] = 0;
+    if(_occupied_by_who[point[0]][point[1]]==who){
+      _occupied[point[0]][point[1]] = unoccupied;
+      _occupied_by_who[point[0]][point[1]] = 0;
+    }
+
     return true;
   }
   Occupied_grid_map(void)
@@ -105,7 +115,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req, multiple_r
     }
     else if (req.operation == unoccupied)
     {
-      Ocg.set_disoccupy(point);
+      Ocg.set_disoccupy(point,req.applier);
       res.operation = go_ahead;
     }
   }
