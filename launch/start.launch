@@ -71,7 +71,7 @@
         <node pkg="map_server" name="map_server" type="map_server" args="$(find multiple_rb_ctrl)/maps/map.yaml" />
     </group>    
      
-    <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true" output="screen"/>
+    <node name="path_server" pkg="multiple_rb_ctrl" type="path_planning" respawn="true"/>
 
     <node name="robot1_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot1" output="screen" launch-prefix="xterm -e"/>
     <node name="robot2_controller" pkg="multiple_rb_ctrl" type="robot_controller" args="robot2" output="screen" launch-prefix="xterm -e"/>
