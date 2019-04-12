@@ -206,7 +206,7 @@ void process_fcn(void) {
                 uint8_t result = apply_for_grid_occupation(next_target_arr);
                 if (result == go_ahead) {
                   path_ptr--;
-                  ROS_INFO("3 apply approved ptr--");
+                  ROS_INFO("1 apply approved ptr--");
                 } else if (result == wait) {
                   ROS_INFO("service blocked,waitting");
                   output_vx = 0;
@@ -215,6 +215,7 @@ void process_fcn(void) {
                 } else if (result == change_route) {
                   output_vx = 0;
                   output_az = 0;
+                  new_goal = true;
                   robot_state = stop_mode;
                 }
               }
@@ -229,7 +230,7 @@ void process_fcn(void) {
                 if (result == go_ahead) {
                   // application approved
                   path_ptr--;
-                  ROS_INFO("4 apply approved ptr--");
+                  ROS_INFO("2 apply approved ptr--");
                 } // wait
                 else if (result == wait) {
                   robot_state = wait_mode;
@@ -267,7 +268,7 @@ void process_fcn(void) {
                 }
                 // application approved
                 path_ptr--;
-                ROS_INFO("1 apply approved ptr--");
+                ROS_INFO("3 apply approved ptr--");
               } else if (result == wait) {
                 ROS_INFO("service blocked,waitting");
                 output_vx = 0;
@@ -276,6 +277,7 @@ void process_fcn(void) {
               } else if (result == change_route) {
                 output_vx = 0;
                 output_az = 0;
+                new_goal = true;
                 robot_state = stop_mode;
               }
               // else wait till next next point avaiable
@@ -289,7 +291,7 @@ void process_fcn(void) {
                   apply_for_grid_occupation(last_target, release);
                 }
                 path_ptr--;
-                ROS_INFO("2 apply approved ptr--");
+                ROS_INFO("4 apply approved ptr--");
               } else if (result == wait) {
                 ROS_INFO("service blocked,waitting");
                 output_vx = 0;
@@ -339,6 +341,7 @@ void process_fcn(void) {
         } else if (result == change_route) {
           output_vx = 0;
           output_az = 0;
+          new_goal = true;
           robot_state = stop_mode;
         }
       }
@@ -366,11 +369,13 @@ void process_fcn(void) {
         } else if (result == change_route) {
           output_vx = 0;
           output_az = 0;
+          new_goal = true;
           robot_state = stop_mode;
         }
       }
       if (timer_counter >= blocked_time) {
         robot_state = stop_mode;
+        new_goal = true;
         timer_counter = 0;
         ROS_INFO("done waiting...");
       }
@@ -380,7 +385,7 @@ void process_fcn(void) {
       // no order received
       output_az = 0;
       output_vx = 0;
-      new_goal = true;
+      new_goal = false;
       order_received = false;
       break;
     }
