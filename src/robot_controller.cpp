@@ -550,7 +550,7 @@ int main(int argc, char **argv)
     break;
   case 3:
     g_odom.pose.pose.position.y = -1;
-    blocked_time = 12;
+    blocked_time = 10;
     break;
   case 4:
     g_odom.pose.pose.position.y = -2;

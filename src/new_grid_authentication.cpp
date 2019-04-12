@@ -5,6 +5,7 @@
 #include <multiple_rb_ctrl/occupy_grid_srv.h>
 #include <ros/ros.h>
 #include <time.h>
+#include <nav_msgs/Odometry.h>
 
 using namespace std;
 
@@ -16,6 +17,9 @@ using namespace std;
 #define wait 0
 #define go_ahead 1
 #define change_route 2
+
+ros::Subscriber odom_sub[4];
+nav_msgs::Odometry odom[4];
 
 class Occupied_grid_map
 {
@@ -212,12 +216,36 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req,
   return true;
 }
 
+void odom1_callback(const nav_msgs::Odometry odom1)
+{
+  odom[0] = odom1;
+}
+
+void odom2_callback(const nav_msgs::Odometry odom2)
+{
+  odom[1] = odom2;
+}
+
+void odom3_callback(const nav_msgs::Odometry odom3)
+{
+  odom[2] = odom3;
+}
+
+void odom4_callback(const nav_msgs::Odometry odom4)
+{
+  odom[3] = odom4;
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "grid_authentication_node");
   ros::NodeHandle nh;
   ros::ServiceServer server =
       nh.advertiseService("/occupy_grid", server_callback);
+  odom_sub[0] = nh.subscribe("robot1/odom", 1, odom1_callback);
+  odom_sub[2] = nh.subscribe("robot2/odom", 1, odom2_callback);
+  odom_sub[3] = nh.subscribe("robot3/odom", 1, odom3_callback);
+  odom_sub[4] = nh.subscribe("robot4/odom", 1, odom4_callback);
   ros::spin();
   return 0;
 }
