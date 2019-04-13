@@ -18,8 +18,31 @@ using namespace std;
 #define go_ahead 1
 #define change_route 2
 
+#define robot1 1
+#define robot2 2
+#define robot3 3
+#define robot4 4
+
 ros::Subscriber odom_sub[4];
-nav_msgs::Odometry odom[4];
+geometry_msgs::Point g_point[4];
+
+float round_coor(float num_to_round)
+{
+  float result = 0;
+  int int_part = (int)num_to_round;
+  float little_part = num_to_round - int_part;
+  if (fabs(little_part) >= 0.25 && fabs(little_part) < 0.75)
+  {
+    result = num_to_round / fabs(num_to_round) * (fabs((float)int_part) + 0.5);
+  }
+  else if (abs(little_part) < 0.25)
+  {
+    result = num_to_round / fabs(num_to_round) * abs(int_part);
+  }
+  else if (abs(little_part) >= 0.75)
+    result = num_to_round / fabs(num_to_round) * (abs(int_part) + 1);
+  return result;
+}
 
 class Occupied_grid_map
 {
@@ -171,7 +194,10 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req,
       ROS_INFO("Opposite direction conflict detected.");
       if (Ocg.check_occupied_by_who(point_next) ==
           Ocg.check_occupied_by_who(point_next_next))
-        res.operation = wait;
+        if (req.applier == robot4 || req.applier == robot3)
+          res.operation = change_route;
+        else
+          res.operation = wait;
       else
         res.operation = wait; // require changes
       break;
@@ -200,6 +226,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req,
   // show map
   if (req.operation == occupy && req.applier == 3)
   {
+    ROS_INFO("occupied map.");
     for (int row = 19; row >= 0; row--)
     {
       for (int col = 0; col < 19; col++)
@@ -209,6 +236,7 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req,
       cout << endl;
     }
     cout << endl;
+    ROS_INFO("master map");
     for (int row = 19; row >= 0; row--)
     {
       for (int col = 0; col < 19; col++)
@@ -224,22 +252,26 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req,
 
 void odom1_callback(const nav_msgs::Odometry odom1)
 {
-  odom[0] = odom1;
+  g_point[0].x = round_coor(odom1.pose.pose.position.x);
+  g_point[0].y = round_coor(odom1.pose.pose.position.y);
 }
 
 void odom2_callback(const nav_msgs::Odometry odom2)
 {
-  odom[1] = odom2;
+  g_point[1].x = round_coor(odom2.pose.pose.position.x);
+  g_point[1].y = round_coor(odom2.pose.pose.position.y);
 }
 
 void odom3_callback(const nav_msgs::Odometry odom3)
 {
-  odom[2] = odom3;
+  g_point[2].x = round_coor(odom3.pose.pose.position.x);
+  g_point[2].y = round_coor(odom3.pose.pose.position.y);
 }
 
 void odom4_callback(const nav_msgs::Odometry odom4)
 {
-  odom[3] = odom4;
+  g_point[3].x = round_coor(odom4.pose.pose.position.x);
+  g_point[3].y = round_coor(odom4.pose.pose.position.y);
 }
 
 int main(int argc, char **argv)

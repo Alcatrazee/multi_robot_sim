@@ -192,6 +192,14 @@ void process_fcn(void)
         if (distance <= 0.03)
         {
           // close to next point
+          // release last point as long as robot reaches next point
+          if (path_ptr < path.poses.size() - 1)
+          {
+            geometry_msgs::Point last_target;
+            last_target.x = path.poses[path_ptr + 1].pose.position.x;
+            last_target.y = path.poses[path_ptr + 1].pose.position.y;
+            apply_for_grid_occupation(last_target, release);
+          }
           // close to the goal
           if (path_ptr == 0)
           {
@@ -225,15 +233,8 @@ void process_fcn(void)
                 uint8_t result = apply_for_grid_occupation(next_target_arr);
                 if (result == go_ahead)
                 {
-                  // release last point as long as robot reaches next point
-                  if (path_ptr < path.poses.size() - 1)
-                  {
-                    geometry_msgs::Point last_target;
-                    last_target.x = path.poses[path_ptr + 1].pose.position.x;
-                    last_target.y = path.poses[path_ptr + 1].pose.position.y;
-                    apply_for_grid_occupation(last_target, release);
-                  }
-                  path_ptr--;
+                  if (path_ptr > 0)
+                    path_ptr--;
                   ROS_INFO("1 apply approved ptr--");
                 }
                 else if (result == wait)
@@ -252,7 +253,7 @@ void process_fcn(void)
                 }
               }
               // only ptr 0 and 1 or only 0 left
-              else
+              else if (path_ptr > 0)
               {
                 robot_state = rotate;
                 geometry_msgs::Point next_target;
@@ -271,7 +272,8 @@ void process_fcn(void)
                     last_target.y = path.poses[path_ptr + 1].pose.position.y;
                     apply_for_grid_occupation(last_target, release);
                   }
-                  path_ptr--;
+                  if (path_ptr > 0)
+                    path_ptr--;
                   ROS_INFO("2 apply approved ptr--");
                 } // wait
                 else if (result == wait)
@@ -315,7 +317,8 @@ void process_fcn(void)
                   apply_for_grid_occupation(last_target, release);
                 }
                 // application approved
-                path_ptr--;
+                if (path_ptr > 0)
+                  path_ptr--;
                 ROS_INFO("3 apply approved ptr--");
               }
               else if (result == wait)
@@ -334,7 +337,7 @@ void process_fcn(void)
               }
               // else wait till next next point avaiable
             }
-            else
+            else if (path_ptr > 0)
             {
               uint8_t result = apply_for_grid_occupation(next_target, true);
               if (result == go_ahead)
@@ -396,7 +399,8 @@ void process_fcn(void)
               last_target.y = path.poses[path_ptr + 1].pose.position.y;
               apply_for_grid_occupation(last_target, release);
             }
-            path_ptr--;
+            if (path_ptr > 0)
+              path_ptr--;
             ROS_INFO("5 apply approved ptr--");
             robot_state = moving_forth;
           }
@@ -416,7 +420,7 @@ void process_fcn(void)
           }
         }
         // only one or two waypoint left
-        else
+        else if (path_ptr > 0)
         {
           geometry_msgs::Point next_target;
           next_target.x = path.poses[path_ptr - 1].pose.position.x;
@@ -425,7 +429,7 @@ void process_fcn(void)
           uint8_t result = apply_for_grid_occupation(next_target, true);
           if (result == go_ahead)
           {
-            if (path_ptr < path.poses.size() - 1)
+            if (path_ptr < path.poses.size() - 1 && path_ptr >= 0)
             {
               geometry_msgs::Point last_target;
               last_target.x = path.poses[path_ptr + 1].pose.position.x;
@@ -453,6 +457,14 @@ void process_fcn(void)
         if (timer_counter >= blocked_time)
         {
           robot_state = stop_mode;
+          geometry_msgs::Point target_to_apply;
+          target_to_apply.x = path.poses[path_ptr + 1].pose.position.x;
+          target_to_apply.y = path.poses[path_ptr + 1].pose.position.y;
+          apply_for_grid_occupation(target_to_apply, release);
+          // release point that it have occupied
+          target_to_apply.x = path.poses[path_ptr - 1].pose.position.x;
+          target_to_apply.y = path.poses[path_ptr - 1].pose.position.y;
+          apply_for_grid_occupation(target_to_apply, release);
           new_goal = true;
           timer_counter = 0;
           ROS_INFO("done waiting...");
@@ -561,11 +573,11 @@ int main(int argc, char **argv)
     break;
   case 3:
     g_odom.pose.pose.position.y = -1;
-    blocked_time = 10;
+    blocked_time = 8;
     break;
   case 4:
     g_odom.pose.pose.position.y = -2;
-    blocked_time = 15;
+    blocked_time = 5;
     break;
   }
   g_odom.pose.pose.position.x =
@@ -634,9 +646,18 @@ int main(int argc, char **argv)
       ROS_INFO("request for path");
       if (client.call(path_req))
       {
+        ROS_INFO("path aquired.");
         order_received = true;
         path = path_req.response.Path;
         path_ptr = path.poses.size() - 1;
+        if (path.poses[path_ptr].pose.position.x != round_coor(g_odom.pose.pose.position.x) && path.poses[path_ptr].pose.position.y != round_coor(g_odom.pose.pose.position.y))
+        {
+          geometry_msgs::PoseStamped point;
+          point.pose.position.x = round_coor(g_odom.pose.pose.position.x);
+          point.pose.position.y = round_coor(g_odom.pose.pose.position.y);
+          path.poses.push_back(point);
+          path_ptr++;
+        }
         geometry_msgs::Point target_to_apply;
         target_to_apply.x = path.poses[path_ptr].pose.position.x;
         target_to_apply.y = path.poses[path_ptr].pose.position.y;
