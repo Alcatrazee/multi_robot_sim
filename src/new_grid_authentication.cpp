@@ -25,10 +25,10 @@ class Occupied_grid_map
 {
 private:
   // occupied:1  not occupied:0   preoccupied:2
-  uint8_t _occupied[19][19];
-  int64_t _occupied_by_who[19][19];
 
 public:
+  uint8_t _occupied[19][19];
+  int64_t _occupied_by_who[19][19];
   // check if the grid is occupied or not or preoccupied
   uint8_t check_if_occupied(uint32_t point[2], int64_t who)
   {
@@ -196,23 +196,29 @@ bool server_callback(multiple_rb_ctrl::occupy_grid_srv::Request &req,
       break;
     }
   }
-  /*
-    // show map
-    if (req.operation == occupy && req.applier == 3) {
-      for (int row = 19; row >= 0; row--) {
-        for (int col = 0; col < 19; col++) {
-          printf("%3d", Ocg._occupied[row][col]);
-        }
-        cout << endl;
+
+  // show map
+  if (req.operation == occupy && req.applier == 3)
+  {
+    for (int row = 19; row >= 0; row--)
+    {
+      for (int col = 0; col < 19; col++)
+      {
+        printf("%3d", Ocg._occupied[row][col]);
       }
       cout << endl;
-      for (int row = 19; row >= 0; row--) {
-        for (int col = 0; col < 19; col++) {
-          printf("%3d", Ocg._occupied_by_who[row][col]);
-        }
-        cout << endl;
+    }
+    cout << endl;
+    for (int row = 19; row >= 0; row--)
+    {
+      for (int col = 0; col < 19; col++)
+      {
+        printf("%3d", Ocg._occupied_by_who[row][col]);
       }
-    } */
+      cout << endl;
+    }
+    cout << endl;
+  }
   return true;
 }
 

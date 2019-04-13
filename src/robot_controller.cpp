@@ -17,7 +17,7 @@ using namespace std;
 #define min_av -PI / 2
 #define max_v 0.4
 #define min_v -max_v
-#define close_distance 0.1
+#define close_distance 0.2
 
 // macro of robot state
 #define stop_mode 0
@@ -192,14 +192,6 @@ void process_fcn(void)
         if (distance <= 0.03)
         {
           // close to next point
-          // release last point as long as robot reaches next point
-          if (path_ptr < path.poses.size() - 1)
-          {
-            geometry_msgs::Point last_target;
-            last_target.x = path.poses[path_ptr + 1].pose.position.x;
-            last_target.y = path.poses[path_ptr + 1].pose.position.y;
-            apply_for_grid_occupation(last_target, release);
-          }
           // close to the goal
           if (path_ptr == 0)
           {
@@ -233,6 +225,14 @@ void process_fcn(void)
                 uint8_t result = apply_for_grid_occupation(next_target_arr);
                 if (result == go_ahead)
                 {
+                  // release last point as long as robot reaches next point
+                  if (path_ptr < path.poses.size() - 1)
+                  {
+                    geometry_msgs::Point last_target;
+                    last_target.x = path.poses[path_ptr + 1].pose.position.x;
+                    last_target.y = path.poses[path_ptr + 1].pose.position.y;
+                    apply_for_grid_occupation(last_target, release);
+                  }
                   path_ptr--;
                   ROS_INFO("1 apply approved ptr--");
                 }
@@ -263,6 +263,14 @@ void process_fcn(void)
                 if (result == go_ahead)
                 {
                   // application approved
+                  // release last point as long as robot reaches next point
+                  if (path_ptr < path.poses.size() - 1)
+                  {
+                    geometry_msgs::Point last_target;
+                    last_target.x = path.poses[path_ptr + 1].pose.position.x;
+                    last_target.y = path.poses[path_ptr + 1].pose.position.y;
+                    apply_for_grid_occupation(last_target, release);
+                  }
                   path_ptr--;
                   ROS_INFO("2 apply approved ptr--");
                 } // wait
@@ -338,7 +346,8 @@ void process_fcn(void)
                   last_target.y = path.poses[path_ptr + 1].pose.position.y;
                   apply_for_grid_occupation(last_target, release);
                 }
-                path_ptr--;
+                if (path_ptr > 0)
+                  path_ptr--;
                 ROS_INFO("4 apply approved ptr--");
               }
               else if (result == wait)
@@ -423,7 +432,8 @@ void process_fcn(void)
               last_target.y = path.poses[path_ptr + 1].pose.position.y;
               apply_for_grid_occupation(last_target, release);
             }
-            path_ptr--;
+            if (path_ptr > 0)
+              path_ptr--;
             ROS_INFO("6 apply approved ptr--");
           }
           else if (result == wait)
@@ -500,7 +510,8 @@ void timer_callback(const ros::TimerEvent &)
   {
     counter_to_ask = 0;
   }
-  ROS_INFO("%f %f", path.poses[path_ptr].pose.position.x, path.poses[path_ptr].pose.position.y);
+  ROS_INFO("robot%d", robot_id_code);
+  ROS_INFO("path_ptr: %lld %f %f", path_ptr, path.poses[path_ptr].pose.position.x, path.poses[path_ptr].pose.position.y);
   path_pub.publish(path_req.response.Path); // publish new path
 }
 
